@@ -1,4 +1,10 @@
 // ==================================================
+// Cargar variables de entorno PRIMERO - CRÍTICO
+// ==================================================
+import dotenv from 'dotenv';
+dotenv.config();
+
+// ==================================================
 // Importaciones de librerías y módulos necesarios
 // ==================================================
 import express from 'express';
@@ -15,11 +21,13 @@ import { Request } from 'express';
 // ==================================================
 // Importaciones de rutas
 // ==================================================
+import resumeRoutes from './modules/model/routes/resumes.routes';
 
 // ==================================================
 // Importaciones de utilidades y configuraciones
 // ==================================================
 import { GeoUtils } from './modules/utils/geo_utils';
+import { initDatabase } from './config/database';
 
 // ==================================================
 // Extensiones de tipos para librerías externas
@@ -212,14 +220,30 @@ app.use((req, res, next) => {
 // 7. Sistema de enrutamiento
 // ==================================================
 
+// --------------------------
+// 7.1 Rutas de ResuMate
+// --------------------------
+app.use('/api/resume', resumeRoutes);
 
 // --------------------------
-// 7.1 Rutas de Autenticación
+// 7.2 Health Check
+// --------------------------
+app.get('/health', (req: Request, res) => {
+  res.json({
+    status: 'ok',
+    model: process.env.LLM_MODEL,
+    database: 'PostgreSQL + pgvector',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// --------------------------
+// 7.3 Rutas de Autenticación
 // --------------------------
 // EN UN FUTURO TAL VES
 
 // --------------------------
-// 7.2 Rutas
+// 7.4 Rutas
 // --------------------------
 
 // CUIDADO CON EL ORDEN DE LAS RUTAS
@@ -236,7 +260,9 @@ app.get('/api/status', (req: Request, res) => {
       baseDatos: 'conectada',
       autenticacion: 'activa',
       geo: req.geo?.country !== 'XX' ? 'activo' : 'inactivo',
-      geoProvider: GeoUtils.checkServiceStatus() === 'active' ? 'ipinfo.io' : 'geoip-lite'
+      geoProvider: GeoUtils.checkServiceStatus() === 'active' ? 'ipinfo.io' : 'geoip-lite',
+      llm: process.env.LLM_MODEL || 'no configurado',
+      openrouter: process.env.OPENROUTER_API_KEY ? 'configurado' : 'no configurado'
     }
   });
 });
@@ -270,9 +296,26 @@ app.use((err: any, req: Request, res: express.Response, next: express.NextFuncti
 // 9. Configuración del servidor web
 // ==================================================
 const server = app.listen(PORT, async () => {
-  console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
-  console.log('Entorno:', process.env.NODE_ENV || 'development');
-  console.log('Estado geolocalización:', GeoUtils.checkServiceStatus());
+  try {
+    // Verificar variables de entorno
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.warn('⚠️  OPENROUTER_API_KEY no configurada');
+    }
+    if (!process.env.DB_PORT || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
+      console.warn('⚠️  DATABASE_URL no configurada');
+    } else {
+      // Inicializar DB solo si está configurada
+      await initDatabase();
+      console.log('💾 PostgreSQL + pgvector: ✅');
+    }
+    
+    console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
+    console.log('Entorno:', process.env.NODE_ENV || 'development');
+    console.log('Estado geolocalización:', GeoUtils.checkServiceStatus());
+    console.log('🤖 Model:', process.env.LLM_MODEL || 'no configurado');
+  } catch (error: any) {
+    console.error('❌ Error al inicializar:', error.message);
+  }
 });
 
 // ==================================================
