@@ -93,6 +93,12 @@ router.post('/optimize', upload.single('resume'), async (req: Request, res: Resp
         optimized: result.optimized,
         keywords: result.keywords,
         model: result.model,
+        gapAnalysis: {
+          metricsFound: result.gaps.metricsFound,
+          missingMetrics: result.gaps.missingMetrics,
+          techStack: result.gaps.techStack,
+          keywordMatches: result.gaps.keywordMatches
+        },
         relevanceScores: relevantChunks.map(c => ({
           similarity: c.similarity,
           preview: c.content.substring(0, 100) + '...'

@@ -1,10 +1,15 @@
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import { pool } from '../../../config/database';
 
-const embeddings = new OpenAIEmbeddings({
-  model: "text-embedding-3-small",
-  apiKey: process.env.OPENAI_API_KEY
+// Usando HuggingFace con modelo BGE-M3 optimizado para RAG multilingüe
+// Debug: verificar que el token se está leyendo
+const hfApiKey = process.env.HUGGINGFACE_API_KEY || "hf_demo";
+console.log('🔑 HuggingFace API Key:', hfApiKey ? `${hfApiKey.substring(0, 10)}...` : 'NOT SET');
+
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  model: "BAAI/bge-m3", // 1024 dimensiones, mejor para español+inglés híbrido
+  apiKey: hfApiKey,
 });
 
 /**

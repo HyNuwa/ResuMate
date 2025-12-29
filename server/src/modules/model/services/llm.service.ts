@@ -31,46 +31,97 @@ Devuelve ÚNICAMENTE una lista separada por comas, sin explicaciones.
 Ejemplo: Python, Django, AWS, Docker, Scrum, CI/CD
 `);
 
-// Prompt principal con fórmula XYZ + Anti-AI
-const resumeOptimizationPrompt = PromptTemplate.fromTemplate(`
-Eres un experto en redacción de CVs técnicos para pasar sistemas ATS y impresionar reclutadores.
+// ==================================================
+// PASO 1: Gap Analysis - Detectar qué métricas existen
+// ==================================================
+const gapAnalysisPrompt = PromptTemplate.fromTemplate(`
+Eres un analista técnico experto en CVs. Tu misión es identificar qué información cuantificable EXISTE en la experiencia original.
 
-REGLAS CRÍTICAS (OBLIGATORIAS):
-1. FÓRMULA XYZ: "Logré [X resultado] medido por [Y métrica], mediante [Z acción técnica]"
-2. PROHIBIDO: adjetivos genéricos (apasionado, dinámico, proactivo, innovador, líder nato)
-3. CUANTIFICA TODO: números, porcentajes, tiempo, usuarios, rendimiento
-4. SÉ TÉCNICO: menciona frameworks exactos, arquitecturas, versiones
-5. VERBOS DE ACCIÓN: Diseñé, Implementé, Reduje, Optimicé, Escalé, Migré, Automaticé
-6. KEYWORDS NATURALES: integra términos de la JD sin forzar
-
-CONTEXTO DEL CANDIDATO:
+EXPERIENCIA ORIGINAL:
 {originalExperience}
 
-REQUISITOS DE LA OFERTA:
+REQUISITOS DE LA JD:
 {jobDescription}
 
-KEYWORDS CLAVE A INTEGRAR:
-{keywords}
+ANALIZA Y DEVUELVE JSON:
+{{
+  "metricsFound": ["lista de TODAS las métricas/números encontrados en el original"],
+  "techStack": ["tecnologías mencionadas"],
+  "missingMetrics": ["qué tipos de métricas faltan para ser un bullet ATS-friendly"],
+  "keywordMatches": ["keywords de la JD que aparecen en la experiencia"]
+}}
 
-TAREA:
-Reescribe los bullet points de experiencia laboral. Cada uno debe:
-- Empezar con verbo de acción fuerte en pasado
-- Incluir métrica cuantificable (%, tiempo, cantidad)
-- Mencionar tecnologías/herramientas específicas
-- Ser conciso (máximo 2 líneas)
+EJEMPLO:
+Original: "Desarrollé microservicios en AWS que mejoraron el rendimiento"
+JSON:
+{{
+  "metricsFound": [],
+  "techStack": ["AWS", "microservicios"],
+  "missingMetrics": ["cantidad de microservicios", "% mejora rendimiento", "tiempo de respuesta"],
+  "keywordMatches": ["AWS"]
+}}
 
-FORMATO DE SALIDA:
-Devuelve SOLO los bullet points mejorados, uno por línea, empezando con "•".
-NO agregues títulos, secciones ni explicaciones adicionales.
-Máximo 5 bullet points.
+DEVUELVE SOLO EL JSON, SIN EXPLICACIONES.
 `);
 
+// ==================================================
+// PASO 2: Optimización con Few-Shot Examples
+// ==================================================
+const fewShotOptimizationPrompt = PromptTemplate.fromTemplate(`
+Eres un experto en CVs técnicos para sistemas ATS. Transforma bullets mediocres en logros de alto impacto.
+
+📚 EJEMPLOS DE TRANSFORMACIÓN:
+
+✅ Ejemplo 1 (CON métrica real):
+❌ Original: "Trabajé en optimización de queries de base de datos"
+✅ Optimizado: "Optimicé 15+ queries PostgreSQL reduciendo el tiempo de respuesta de 2.5s a 400ms, mejorando la experiencia de 50K+ usuarios activos"
+
+✅ Ejemplo 2 (SIN métrica - usar placeholder):
+❌ Original: "Implementé pipeline CI/CD en GitLab"
+✅ Optimizado: "Diseñé e implementé pipeline CI/CD automatizado en GitLab usando Docker y Kubernetes, logrando [MÉTRICA: % reducción en tiempo de deploy o frecuencia de deploys/semana]"
+
+✅ Ejemplo 3 (Multilingüe con métrica parcial):
+❌ Original: "Led a team developing REST APIs"
+✅ Optimizado: "Lideré equipo de [MÉTRICA: número de developers] en desarrollo de APIs REST con Node.js + Express, procesando [MÉTRICA: requests/segundo o total usuarios]"
+
+✅ Ejemplo 4 (Migración técnica):
+❌ Original: "Migré sistema legacy a arquitectura moderna"
+✅ Optimizado: "Orquesté migración de monolito legacy a arquitectura de microservicios usando Spring Boot + Kafka, reduciendo [MÉTRICA: downtime, costos de infra, o tiempo de desarrollo de features]"
+
+---
+
+📊 CONTEXTO DE ESTA TAREA:
+Experiencia Original: {originalExperience}
+Métricas Encontradas: {metricsFound}
+Métricas Faltantes: {missingMetrics}
+Keywords Objetivo: {keywords}
+
+🎯 REGLAS CRÍTICAS:
+1. Si hay métrica REAL en "Métricas Encontradas" → úsala exactamente como está
+2. Si NO hay métrica → usa formato [MÉTRICA: descripción específica de qué medir]
+3. Máximo 2 líneas por bullet (25 palabras)
+4. Verbos de impacto: Arquitecté, Lideré, Optimicé, Escalé, Automaticé, Consolidé
+5. Integra keywords de forma NATURAL, no forzada
+6. PROHIBIDO inventar números o porcentajes
+
+📝 SALIDA:
+Devuelve SOLO los bullet points optimizados, uno por línea, empezando con "•".
+NO agregues títulos, explicaciones ni secciones adicionales.
+Máximo 5 bullets.
+`);
+
+// ==================================================
 // Cadenas de procesamiento
+// ==================================================
 const keywordChain = keywordExtractionPrompt
   .pipe(createLLM())
   .pipe(new StringOutputParser());
 
-const optimizationChain = resumeOptimizationPrompt
+const gapAnalysisChain = gapAnalysisPrompt
+  .pipe(createLLM())
+  .pipe(new StringOutputParser());
+
+const optimizationChain = fewShotOptimizationPrompt
   .pipe(createLLM())
   .pipe(new StringOutputParser());
 
@@ -118,33 +169,75 @@ export async function extractKeywords(jobDescription: string): Promise<string[]>
   }
 }
 
+interface GapAnalysis {
+  metricsFound: string[];
+  techStack: string[];
+  missingMetrics: string[];
+  keywordMatches: string[];
+}
+
 interface OptimizationResult {
   optimized: string;
   keywords: string[];
   model: string | undefined;
+  gaps: GapAnalysis; // Información sobre qué falta para que el usuario complete
 }
 
 /**
- * Optimiza un CV usando la experiencia relevante y la JD
+ * Optimiza un CV usando sistema de 2 pasos: Gap Analysis + Few-Shot Optimization
+ * Esto previene alucinaciones forzando al LLM a usar solo métricas reales o placeholders
  */
 export async function optimizeResume(originalExperience: string, jobDescription: string): Promise<OptimizationResult> {
   try {
-    console.log('🤖 Optimizing resume with LLM...');
+    console.log('🤖 Starting 2-step optimization process...');
     
-    // 1. Extrae keywords
+    // PASO 1: Gap Analysis - Identificar qué métricas existen
+    console.log('📊 Step 1/3: Analyzing gaps...');
+    const gapAnalysisResult = await gapAnalysisChain.invoke({
+      originalExperience,
+      jobDescription
+    });
+    
+    // Parse del JSON devuelto por el LLM
+    let gaps: GapAnalysis;
+    try {
+      // Limpiar posibles markdown wrappers
+      const cleanJson = gapAnalysisResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      gaps = JSON.parse(cleanJson);
+    } catch (parseError) {
+      console.warn('⚠️ Gap analysis JSON parse failed, using defaults');
+      gaps = {
+        metricsFound: [],
+        techStack: [],
+        missingMetrics: ['métricas de impacto', 'resultados cuantificables'],
+        keywordMatches: []
+      };
+    }
+    
+    console.log(`✅ Gap Analysis: ${gaps.metricsFound.length} metrics found, ${gaps.missingMetrics.length} missing`);
+    
+    // PASO 2: Extracción de keywords de la JD
+    console.log('🔑 Step 2/3: Extracting keywords...');
     const keywords = await extractKeywords(jobDescription);
     
-    // 2. Genera contenido optimizado
+    // PASO 3: Optimización con contexto de gaps
+    console.log('✨ Step 3/3: Generating optimized content...');
     const optimized = await optimizationChain.invoke({
       originalExperience,
-      jobDescription,
+      metricsFound: gaps.metricsFound.length > 0 
+        ? gaps.metricsFound.join(", ") 
+        : "Ninguna métrica cuantificable encontrada",
+      missingMetrics: gaps.missingMetrics.join(", "),
       keywords: keywords.join(", "),
     });
+    
+    console.log('✅ Optimization complete with gap-aware approach');
     
     return {
       optimized: optimized.trim(),
       keywords,
       model: process.env.LLM_MODEL,
+      gaps, // Devolvemos gaps para que el frontend pueda mostrar qué falta
     };
   } catch (error: any) {
     console.error("Error optimizing resume:", error);

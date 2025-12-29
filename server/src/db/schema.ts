@@ -19,7 +19,7 @@ export const resumeChunks = pgTable('resume_chunks', {
     .references(() => resumes.id, { onDelete: 'cascade' })
     .notNull(),
   content: text('content').notNull(),
-  embedding: vector('embedding', { dimensions: 1536 }),
+  embedding: vector('embedding', { dimensions: 1024 }), // BAAI/bge-m3 - optimized for multilingual RAG
   chunkIndex: integer('chunk_index'),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow(),
