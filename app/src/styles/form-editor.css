@@ -40,8 +40,14 @@
   margin-bottom: 1.5rem;
 }
 
+.cv-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .cv-title-input {
-  width: 100%;
+  flex: 1;
   padding: 0.75rem 1rem;
   border: 2px solid #d1d5db;
   border-radius: 8px;
@@ -61,6 +67,55 @@
 .cv-title-input::placeholder {
   color: #9ca3af;
   font-weight: 500;
+}
+
+/* Save Indicator */
+.save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.813rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.save-indicator-saving {
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+}
+
+.save-indicator-saved {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.save-indicator-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.save-icon {
+  flex-shrink: 0;
+}
+
+.save-icon.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .section-title {

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { ProfileData } from '../../types/resume';
 import { RichTextEditor } from '../common/RichTextEditor';
 
@@ -6,7 +7,7 @@ interface ProfileSectionProps {
   onChange: (data: ProfileData) => void;
 }
 
-export function ProfileSection({ data, onChange }: ProfileSectionProps) {
+export const ProfileSection = memo(function ProfileSection({ data, onChange }: ProfileSectionProps) {
   const handleChange = (field: keyof ProfileData, value: string) => {
     onChange({ ...data, [field]: value });
   };
@@ -99,4 +100,4 @@ export function ProfileSection({ data, onChange }: ProfileSectionProps) {
       </div>
     </div>
   );
-}
+});

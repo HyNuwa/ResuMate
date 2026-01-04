@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, FileText, Upload } from 'lucide-react';
 import type { Resume } from '../types/resume';
 import { CVCard } from './CVCard';
+import { useAllCVs, useDeleteCV } from '../hooks/useQueryCVs';
 import '../styles/my-cvs.css';
 
 interface MyCVsPageProps {
@@ -11,53 +12,18 @@ interface MyCVsPageProps {
 }
 
 export function MyCVsPage({ onCreateNew, onOpenCV, onScanCV }: MyCVsPageProps) {
-  const [cvs, setCvs] = useState<Resume[]>([]);
+  // TanStack Query hooks - auto-maneja loading, error, cache
+  const { data: cvs = [], isLoading } = useAllCVs();
+  
+  // Delete mutation
+  const { mutate: deleteCV } = useDeleteCV();
+
+  // Filtro local (estado UI)
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load CVs from localStorage
-  useEffect(() => {
-    const loadCVs = () => {
-      const stored = localStorage.getItem('resumate_cvs');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setCvs(parsed);
-        } catch (error) {
-          console.error('Error loading CVs:', error);
-          setCvs([]);
-        }
-      }
-    };
-
-    loadCVs();
-
-    // Listen for storage changes to update when CVs are saved
-    const handleStorageChange = () => {
-      loadCVs();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Custom event for same-tab updates
-    window.addEventListener('cvs-updated', loadCVs);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('cvs-updated', loadCVs);
-    };
-  }, []);
-
   const handleDeleteCV = (id: string) => {
-    const updatedCvs = cvs.filter(cv => cv.metadata.id !== id);
-    localStorage.setItem('resumate_cvs', JSON.stringify(updatedCvs));
-    setCvs(updatedCvs);
-    window.dispatchEvent(new Event('cvs-updated'));
+    deleteCV(id);
   };
-
-  const filteredCvs = cvs.filter(cv =>
-    cv.metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cv.profile.fullName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="my-cvs-page">
@@ -97,51 +63,38 @@ export function MyCVsPage({ onCreateNew, onOpenCV, onScanCV }: MyCVsPageProps) {
           </div>
         )}
 
-        {/* CVs Grid */}
-        {filteredCvs.length > 0 ? (
-          <div className="cvs-grid">
-            {filteredCvs.map(cv => (
-              <CVCard
-                key={cv.metadata.id}
-                cv={cv}
-                onClick={() => onOpenCV(cv)}
-                onDelete={handleDeleteCV}
-              />
-            ))}
+        {/* CV Grid */}
+        {isLoading ? (
+          <div className="loading-state">
+            <p>Cargando CVs...</p>
           </div>
         ) : cvs.length === 0 ? (
-          /* Empty State */
           <div className="empty-state">
-            <div className="empty-state-icon">
-              <FileText size={64} />
-            </div>
-            <h2 className="empty-state-title">No tienes CVs guardados</h2>
-            <p className="empty-state-description">
-              Comienza creando un nuevo CV desde cero o escaneando uno existente
-            </p>
-            <div className="empty-state-actions">
-              <button className="action-btn primary" onClick={onCreateNew}>
-                <Plus size={20} />
-                Crear Nuevo CV
-              </button>
-              <button className="action-btn secondary" onClick={onScanCV}>
-                <Upload size={20} />
-                Escanear CV
-              </button>
-            </div>
+            <FileText size={64} className="empty-icon" />
+            <h3>No tienes CVs todavía</h3>
+            <p>Crea tu primer CV o escanea uno existente para empezar</p>
           </div>
         ) : (
-          /* No Search Results */
-          <div className="empty-state">
-            <div className="empty-state-icon">
-              <FileText size={64} />
-            </div>
-            <h2 className="empty-state-title">No se encontraron resultados</h2>
-            <p className="empty-state-description">
-              Intenta con otros términos de búsqueda
-            </p>
+          <div className="cvs-grid">
+            {cvs
+              .filter((cv) => {
+                if (!searchQuery) return true;
+                const query = searchQuery.toLowerCase();
+                const titleMatch = cv.metadata.title.toLowerCase().includes(query);
+                const nameMatch = cv.profile?.fullName?.toLowerCase().includes(query);
+                return titleMatch || nameMatch;
+              })
+              .map((cv) => (
+                <CVCard
+                  key={cv.metadata.id}
+                  cv={cv}
+                  onClick={() => onOpenCV(cv)}
+                  onDelete={handleDeleteCV}
+                />
+              ))}
           </div>
         )}
+        
       </div>
     </div>
   );

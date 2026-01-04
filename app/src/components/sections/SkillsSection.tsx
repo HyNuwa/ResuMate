@@ -11,50 +11,49 @@ interface SkillsSectionProps {
 export function SkillsSection({ data, onChange }: SkillsSectionProps) {
   const [newSkillInputs, setNewSkillInputs] = useState<Record<string, string>>({});
 
+  // Helper to reduce repetition of onChange({ categories: ... })
+  const updateCategories = (updater: (categories: SkillCategory[]) => SkillCategory[]) => {
+    onChange({ categories: updater(data.categories) });
+  };
+
   const handleAddCategory = () => {
     const newCategory = createSkillCategory();
-    onChange({
-      categories: [...data.categories, newCategory],
-    });
+    updateCategories(categories => [...categories, newCategory]);
   };
 
   const handleRemoveCategory = (id: string) => {
-    onChange({
-      categories: data.categories.filter(c => c.id !== id),
-    });
+    updateCategories(categories => categories.filter(c => c.id !== id));
   };
 
   const handleCategoryNameChange = (id: string, name: string) => {
-    onChange({
-      categories: data.categories.map(c =>
-        c.id === id ? { ...c, name } : c
-      ),
-    });
+    updateCategories(categories =>
+      categories.map(c => c.id === id ? { ...c, name } : c)
+    );
   };
 
   const handleAddSkill = (categoryId: string) => {
     const skillName = newSkillInputs[categoryId]?.trim();
     if (!skillName) return;
 
-    onChange({
-      categories: data.categories.map(c =>
+    updateCategories(categories =>
+      categories.map(c =>
         c.id === categoryId
           ? { ...c, items: [...c.items, skillName] }
           : c
-      ),
-    });
+      )
+    );
 
     setNewSkillInputs(prev => ({ ...prev, [categoryId]: '' }));
   };
 
   const handleRemoveSkill = (categoryId: string, skillIndex: number) => {
-    onChange({
-      categories: data.categories.map(c =>
+    updateCategories(categories =>
+      categories.map(c =>
         c.id === categoryId
           ? { ...c, items: c.items.filter((_, i) => i !== skillIndex) }
           : c
-      ),
-    });
+      )
+    );
   };
 
   const handleNewSkillInputChange = (categoryId: string, value: string) => {

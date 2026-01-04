@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useEffect, useCallback, memo, useState } from 'react';
+import { Plus, X, Save, Check, AlertCircle } from 'lucide-react';
 import type { Resume } from '../types/resume';
-import { createEmptyResume } from '../types/resume';
 import { ProfileSection } from './sections/ProfileSection';
 import { ExperienceSection } from './sections/ExperienceSection';
 import { EducationSection } from './sections/EducationSection';
@@ -11,166 +10,251 @@ import { LanguagesSection } from './sections/LanguagesSection';
 import { ResumePreview } from './preview/ResumePreview';
 import { ResumeMetrics } from './preview/ResumeMetrics';
 import { CategorySelector } from './CategorySelector';
+import { useCVStore, selectResume, selectProfile, selectExperience, selectEducation, selectSkills, selectCertifications, selectLanguages, selectTitle, selectEnabledCategories } from '../store/useCVStore';
+import { useFormAutoSave, type SaveStatus } from '../hooks/useFormAutoSave';
+import { useCreateCV, useUpdateCV } from '../hooks/useQueryCVs';
 import '../styles/form-editor.css';
 
 interface FormBasedEditorProps {
   initialCV?: Resume;
   onSave?: (cv: Resume) => void;
+  isExistingCV?: boolean; // If true, CV is loaded from DB; if false/undefined, it's a new CV
 }
 
-export function FormBasedEditor({ initialCV, onSave }: FormBasedEditorProps) {
-  const [resume, setResume] = useState<Resume>(initialCV || createEmptyResume());
+// Save indicator component (memoized)
+const SaveIndicator = memo(({ status }: { status: SaveStatus }) => {
+  if (status === 'idle') return null;
+
+  return (
+    <div className={`save-indicator save-indicator-${status}`}>
+      {status === 'saving' && (
+        <>
+          <Save className="save-icon spin" size={16} />
+          <span>Guardando...</span>
+        </>
+      )}
+      {status === 'saved' && (
+        <>
+          <Check className="save-icon" size={16} />
+          <span>Guardado</span>
+        </>
+      )}
+      {status === 'error' && (
+        <>
+          <AlertCircle className="save-icon" size={16} />
+          <span>Error al guardar</span>
+        </>
+      )}
+    </div>
+  );
+});
+
+SaveIndicator.displayName = 'SaveIndicator';
+
+export function FormBasedEditor({ initialCV, onSave, isExistingCV = false }: FormBasedEditorProps) {
+  // Zustand store actions
+  const setResume = useCVStore((state) => state.setResume);
+  const updateProfile = useCVStore((state) => state.updateProfile);
+  const updateExperience = useCVStore((state) => state.updateExperience);
+  const updateEducation = useCVStore((state) => state.updateEducation);
+  const updateSkills = useCVStore((state) => state.updateSkills);
+  const updateCertifications = useCVStore((state) => state.updateCertifications);
+  const updateLanguages = useCVStore((state) => state.updateLanguages);
+  const updateTitle = useCVStore((state) => state.updateTitle);
+  const addCategory = useCVStore((state) => state.addCategory);
+  const removeCategory = useCVStore((state) => state.removeCategory);
+
+  // Granular state selectors (prevents unnecessary re-renders)
+  const resume = useCVStore(selectResume);
+  const profile = useCVStore(selectProfile);
+  const experience = useCVStore(selectExperience);
+  const education = useCVStore(selectEducation);
+  const skills = useCVStore(selectSkills);
+  const certifications = useCVStore(selectCertifications);
+  const languages = useCVStore(selectLanguages);
+  const title = useCVStore(selectTitle);
+  const enabledCategories = useCVStore(selectEnabledCategories);
+
+  // Show category selector state (local to this component)
   const [showCategorySelector, setShowCategorySelector] = useState(false);
 
-  // Auto-save to localStorage
+  // TanStack Query mutations
+  const createCVMutation = useCreateCV();
+  const updateCVMutation = useUpdateCV();
+
+  // Update resume when initialCV changes (when navigating to different CV)
+  // Only reset if the ID is different to avoid losing user changes
   useEffect(() => {
-    if (resume.metadata.id) {
-      const cvs = JSON.parse(localStorage.getItem('resumate_cvs') || '[]');
-      const existingIndex = cvs.findIndex((cv: Resume) => cv.metadata.id === resume.metadata.id);
-      
-      const updatedResume = {
-        ...resume,
-        metadata: {
-          ...resume.metadata,
-          updatedAt: new Date().toISOString()
-        }
-      };
-
-      if (existingIndex >= 0) {
-        cvs[existingIndex] = updatedResume;
-      } else {
-        cvs.push(updatedResume);
-      }
-
-      localStorage.setItem('resumate_cvs', JSON.stringify(cvs));
-      onSave?.(updatedResume);
+    console.log('📋 useEffect [initialCV] triggered');
+    console.log('  initialCV ID:', initialCV?.metadata.id);
+    console.log('  current resume ID:', resume.metadata.id);
+    console.log('  isExistingCV prop:', isExistingCV);
+    
+    if (initialCV && initialCV.metadata.id !== resume.metadata.id) {
+      console.log('  ⚠️ RESETTING STORE - Different CV ID detected');
+      console.log('  New CV data:', initialCV);
+      setResume(initialCV);
+      // Reset hasBeenSaved based on whether we're loading an existing CV
+      setHasBeenSaved(isExistingCV);
+      console.log('  Set hasBeenSaved to:', isExistingCV);
+    } else {
+      console.log('  ✅ No reset - Same CV ID or no initialCV');
     }
-  }, [resume, onSave]);
+  }, [initialCV?.metadata.id, resume.metadata.id, setResume, initialCV, isExistingCV]);
 
-  const handleAddCategory = (categoryId: string) => {
-    setResume({
-      ...resume,
-      enabledCategories: [...resume.enabledCategories, categoryId]
-    });
-  };
+  // Track if this CV has been saved to the database at least once
+  // Initialize based on isExistingCV prop
+  const [hasBeenSaved, setHasBeenSaved] = useState(isExistingCV);
 
-  const handleRemoveCategory = (categoryId: string) => {
-    setResume({
-      ...resume,
-      enabledCategories: resume.enabledCategories.filter(id => id !== categoryId)
-    });
-  };
+  // Event-driven auto-save (triggers only on user onChange)
+  const { handleChange, saveStatus } = useFormAutoSave({
+    saveFn: useCallback(async () => {
+      // Get CURRENT state from store to avoid stale closure
+      const currentStore = useCVStore.getState();
+      const currentResume = currentStore.resume;
 
-  const handleTitleChange = (title: string) => {
-    setResume({
-      ...resume,
-      metadata: { ...resume.metadata, title }
-    });
-  };
+      console.log('🔵 AUTO-SAVE TRIGGERED');
+      console.log('  hasBeenSaved:', hasBeenSaved);
+      console.log('  CV ID:', currentResume.metadata.id);
+      console.log('  CV Title:', currentResume.metadata.title);
+      console.log('  Profile data:', currentResume.profile);
+      console.log('  Full resume to save:', JSON.stringify(currentResume, null, 2));
+
+      try {
+        if (!hasBeenSaved) {
+          console.log('  → Creating NEW CV in database...');
+          // Create new CV using mutation
+          const created = await createCVMutation.mutateAsync(currentResume);
+          console.log('  ✅ CV created in DB:', created);
+          // Mark as saved so future saves use update
+          setHasBeenSaved(true);
+        } else {
+          console.log('  → Updating EXISTING CV in database...');
+          // Update existing CV using mutation
+          await updateCVMutation.mutateAsync({
+            id: currentResume.metadata.id,
+            data: currentResume,
+          });
+          console.log('  ✅ CV updated in DB');
+        }
+
+        // TanStack Query auto-invalida el cache
+        onSave?.(currentResume);
+      } catch (error) {
+        console.error('❌ Save failed:', error);
+        throw error; // Re-throw to let useFormAutoSave handle error status
+      }
+    }, [hasBeenSaved, createCVMutation, updateCVMutation, onSave]),
+    delay: 3000,
+    enabled: !!resume.metadata.id, // Only for CVs with ID (created or loaded)
+  });
 
   return (
     <div className="form-editor-container">
       {/* Left Panel - Form */}
       <div className="form-panel">
         <div className="form-scroll">
-          {/* CV Title Input */}
+          {/* CV Title Input with Save Indicator */}
           <div className="cv-title-section">
-            <input
-              type="text"
-              className="cv-title-input"
-              value={resume.metadata.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="Título del CV"
-            />
+            <div className="cv-title-wrapper">
+              <input
+                type="text"
+                className="cv-title-input"
+                value={title}
+                onChange={(e) => handleChange(() => updateTitle(e.target.value))}
+                placeholder="Título del CV"
+              />
+              <SaveIndicator status={saveStatus} />
+            </div>
           </div>
 
           {/* Profile Section - Always visible */}
           <ProfileSection
-            data={resume.profile}
-            onChange={(profile) => setResume({ ...resume, profile })}
+            data={profile}
+            onChange={(newProfile) => handleChange(() => updateProfile(newProfile))}
           />
 
           {/* Experience Section - Conditional */}
-          {resume.enabledCategories.includes('experience') && (
+          {enabledCategories.includes('experience') && (
             <div className="section-wrapper">
               <button
                 className="remove-category-btn"
-                onClick={() => handleRemoveCategory('experience')}
+                onClick={() => removeCategory('experience')}
                 title="Eliminar sección"
               >
                 <X size={14} />
               </button>
               <ExperienceSection
-                entries={resume.experience}
-                onChange={(experience) => setResume({ ...resume, experience })}
+                entries={experience}
+                onChange={(newExperience) => handleChange(() => updateExperience(newExperience))}
               />
             </div>
           )}
 
           {/* Education Section - Conditional */}
-          {resume.enabledCategories.includes('education') && (
+          {enabledCategories.includes('education') && (
             <div className="section-wrapper">
               <button
                 className="remove-category-btn"
-                onClick={() => handleRemoveCategory('education')}
+                onClick={() => removeCategory('education')}
                 title="Eliminar sección"
               >
                 <X size={14} />
               </button>
               <EducationSection
-                entries={resume.education}
-                onChange={(education) => setResume({ ...resume, education })}
+                entries={education}
+                onChange={(newEducation) => handleChange(() => updateEducation(newEducation))}
               />
             </div>
           )}
 
           {/* Skills Section - Conditional */}
-          {resume.enabledCategories.includes('skills') && (
+          {enabledCategories.includes('skills') && (
             <div className="section-wrapper">
               <button
                 className="remove-category-btn"
-                onClick={() => handleRemoveCategory('skills')}
+                onClick={() => removeCategory('skills')}
                 title="Eliminar sección"
               >
                 <X size={14} />
               </button>
               <SkillsSection
-                data={resume.skills}
-                onChange={(skills) => setResume({ ...resume, skills })}
+                data={skills}
+                onChange={(newSkills) => handleChange(() => updateSkills(newSkills))}
               />
             </div>
           )}
 
           {/* Certifications Section - Conditional */}
-          {resume.enabledCategories.includes('certifications') && (
+          {enabledCategories.includes('certifications') && (
             <div className="section-wrapper">
               <button
                 className="remove-category-btn"
-                onClick={() => handleRemoveCategory('certifications')}
+                onClick={() => removeCategory('certifications')}
                 title="Eliminar sección"
               >
                 <X size={14} />
               </button>
               <CertificationsSection
-                entries={resume.certifications}
-                onChange={(certifications) => setResume({ ...resume, certifications })}
+                entries={certifications}
+                onChange={(newCerts) => handleChange(() => updateCertifications(newCerts))}
               />
             </div>
           )}
 
           {/* Languages Section - Conditional */}
-          {resume.enabledCategories.includes('languages') && (
+          {enabledCategories.includes('languages') && (
             <div className="section-wrapper">
               <button
                 className="remove-category-btn"
-                onClick={() => handleRemoveCategory('languages')}
+                onClick={() => removeCategory('languages')}
                 title="Eliminar sección"
               >
                 <X size={14} />
               </button>
               <LanguagesSection
-                entries={resume.languages}
-                onChange={(languages) => setResume({ ...resume, languages })}
+                entries={languages}
+                onChange={(newLangs) => handleChange(() => updateLanguages(newLangs))}
               />
             </div>
           )}
@@ -196,12 +280,11 @@ export function FormBasedEditor({ initialCV, onSave }: FormBasedEditorProps) {
       {/* Category Selector Modal */}
       {showCategorySelector && (
         <CategorySelector
-          enabledCategories={resume.enabledCategories}
-          onAddCategory={handleAddCategory}
+          enabledCategories={enabledCategories}
+          onAddCategory={addCategory}
           onClose={() => setShowCategorySelector(false)}
         />
       )}
     </div>
   );
 }
-

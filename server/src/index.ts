@@ -22,6 +22,7 @@ import { Request } from 'express';
 // Importaciones de rutas
 // ==================================================
 import resumeRoutes from './modules/model/routes/resumes.routes';
+import cvSyncRoutes from './modules/cv-sync/routes/cv-sync.routes';
 
 // ==================================================
 // Importaciones de utilidades y configuraciones
@@ -224,6 +225,7 @@ app.use((req, res, next) => {
 // 7.1 Rutas de ResuMate
 // --------------------------
 app.use('/api/resume', resumeRoutes);
+app.use('/api/cv-sync', cvSyncRoutes);
 
 // --------------------------
 // 7.2 Health Check

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { Resume } from '../../types/resume';
 import { Download } from 'lucide-react';
 import { useState } from 'react';
@@ -6,7 +7,7 @@ interface ResumePreviewProps {
   resume: Resume;
 }
 
-export function ResumePreview({ resume }: ResumePreviewProps) {
+export const ResumePreview = memo(function ResumePreview({ resume }: ResumePreviewProps) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportPDF = () => {
@@ -201,4 +202,4 @@ export function ResumePreview({ resume }: ResumePreviewProps) {
       </div>
     </div>
   );
-}
+});

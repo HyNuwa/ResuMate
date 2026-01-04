@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { RefreshCw, TrendingUp, FileCheck, Target } from 'lucide-react';
 
 interface ResumeMetricsProps {
   score: number; // 0-100
 }
 
-export function ResumeMetrics({ score }: ResumeMetricsProps) {
+export const ResumeMetrics = memo(function ResumeMetrics({ score }: ResumeMetricsProps) {
   const getScoreColor = (score: number) => {
     if (score >= 80) return '#10b981'; // green
     if (score >= 60) return '#f59e0b'; // yellow
@@ -136,4 +137,4 @@ export function ResumeMetrics({ score }: ResumeMetricsProps) {
       </div>
     </div>
   );
-}
+});

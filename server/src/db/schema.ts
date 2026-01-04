@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, jsonb, vector } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp, jsonb, vector, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Tabla para almacenar CVs parseados
@@ -38,6 +38,15 @@ export const optimizations = pgTable('optimizations', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Tabla para CVs creados manualmente por usuarios
+export const userCvs = pgTable('user_cvs', {
+  id: uuid('id').primaryKey(),
+  title: text('title').notNull().default('Untitled CV'),
+  data: jsonb('data').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // Relaciones
 export const resumesRelations = relations(resumes, ({ many }) => ({
   chunks: many(resumeChunks),
@@ -67,3 +76,7 @@ export type NewResumeChunk = typeof resumeChunks.$inferInsert;
 
 export type Optimization = typeof optimizations.$inferSelect;
 export type NewOptimization = typeof optimizations.$inferInsert;
+
+export type UserCv = typeof userCvs.$inferSelect;
+export type NewUserCv = typeof userCvs.$inferInsert;
+
