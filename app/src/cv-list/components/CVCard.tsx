@@ -1,4 +1,4 @@
-import type { Resume } from '../types/resume';
+import type { Resume } from '@/shared/types/resume';
 import { Calendar, Trash2 } from 'lucide-react';
 
 interface CVCardProps {

@@ -1,7 +1,7 @@
 import { Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import type { CertificationEntry } from '../../types/resume';
-import { createCertificationEntry } from '../../types/resume';
+import type { CertificationEntry } from '@/shared/types/resume';
+import { createCertificationEntry } from '@/shared/types/resume';
 
 interface CertificationsSectionProps {
   entries: CertificationEntry[];

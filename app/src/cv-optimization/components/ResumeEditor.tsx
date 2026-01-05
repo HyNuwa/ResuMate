@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Crepe } from '@milkdown/crepe';
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
-import { HARVARD_TEMPLATE_MARKDOWN } from '../templates/HarvardTemplate';
-import '../styles/resume-editor.css';
+import { HARVARD_TEMPLATE_MARKDOWN } from '@/templates/HarvardTemplate';
+import '@/styles/resume-editor.css';
 import { Download } from 'lucide-react';
 
 export function ResumeEditor() {

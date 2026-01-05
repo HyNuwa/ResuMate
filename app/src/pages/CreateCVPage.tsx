@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { FormBasedEditor } from '../components/FormBasedEditor';
-import { createEmptyResume } from '../types/resume';
+import { FormBasedEditor } from '../cv-editor/components';
+import { createEmptyResume } from '../shared/types/resume';
 
 export function CreateCVPage() {
   // Memoize initialCV to prevent creating a new empty CV on every render

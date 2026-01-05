@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { FormBasedEditor } from '../components/FormBasedEditor';
-import { useCV } from '../hooks/useQueryCVs';
+import { FormBasedEditor } from '../cv-editor/components';
+import { useCV } from '../shared/hooks/useQueryCVs';
 
 export function CVEditorPage() {
   const { id } = useParams();

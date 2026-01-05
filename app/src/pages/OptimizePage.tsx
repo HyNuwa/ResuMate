@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { UploadZone } from '../components/UploadZone';
-import { JobDescriptionInput } from '../components/JobDescriptionInput';
-import { ResultPreview } from '../components/ResultPreview';
+import { UploadZone, JobDescriptionInput, ResultPreview } from '../cv-optimization/components';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { optimizeCV, type OptimizationResult } from '../services/cv.service';
+import { optimizeCV, type OptimizationResult } from '../shared/services/cv.service';
 
 export function OptimizePage() {
   const [file, setFile] = useState<File | null>(null);

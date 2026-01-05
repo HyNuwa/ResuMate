@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Plus, FileText, Upload } from 'lucide-react';
-import type { Resume } from '../types/resume';
+import type { Resume } from '@/shared/types/resume';
 import { CVCard } from './CVCard';
-import { useAllCVs, useDeleteCV } from '../hooks/useQueryCVs';
-import '../styles/my-cvs.css';
+import { useAllCVs, useDeleteCV } from '@/shared/hooks/useQueryCVs';
+import '@/styles/my-cvs.css';
 
 interface MyCVsPageProps {
   onCreateNew: () => void;

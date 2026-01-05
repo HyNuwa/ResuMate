@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import type { ProfileData } from '../../types/resume';
-import { RichTextEditor } from '../common/RichTextEditor';
+import type { ProfileData } from '@/shared/types/resume';
+import { RichTextEditor } from '@/components/common/RichTextEditor';
 
 interface ProfileSectionProps {
   data: ProfileData;

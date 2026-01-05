@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './app/Layout';
+import { Layout } from './shared/components/layout/Layout';
 import { OptimizePage } from './pages/OptimizePage';
 import { MyCVsPage } from './pages/MyCVsPage';
 import { CreateCVPage } from './pages/CreateCVPage';

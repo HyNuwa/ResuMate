@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import type { ExperienceEntry } from '../../types/resume';
-import { createExperienceEntry } from '../../types/resume';
-import { RichTextEditor } from '../common/RichTextEditor';
+import type { EducationEntry } from '@/shared/types/resume';
+import { createEducationEntry } from '@/shared/types/resume';
+import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 
-interface ExperienceSectionProps {
-  entries: ExperienceEntry[];
-  onChange: (entries: ExperienceEntry[]) => void;
+interface EducationSectionProps {
+  entries: EducationEntry[];
+  onChange: (entries: EducationEntry[]) => void;
 }
 
-export function ExperienceSection({ entries, onChange }: ExperienceSectionProps) {
+export function EducationSection({ entries, onChange }: EducationSectionProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(entries.map(e => e.id)));
 
   const toggleExpanded = (id: string) => {
@@ -25,7 +25,7 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
   };
 
   const handleAdd = () => {
-    const newEntry = createExperienceEntry();
+    const newEntry = createEducationEntry();
     onChange([...entries, newEntry]);
     setExpandedIds(prev => new Set([...prev, newEntry.id]));
   };
@@ -39,20 +39,20 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
     });
   };
 
-  const handleChange = (id: string, field: keyof ExperienceEntry, value: string) => {
+  const handleChange = (id: string, field: keyof EducationEntry, value: string) => {
     onChange(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
   };
 
   return (
     <div className="cv-section">
-      <h2 className="section-title">Experience</h2>
+      <h2 className="section-title">Education</h2>
       
       <div className="entries-list">
         {entries.map((entry, index) => (
           <div key={entry.id} className="entry-card">
             <div className="entry-header" onClick={() => toggleExpanded(entry.id)}>
               <div className="entry-title">
-                {entry.position || entry.company || `Experience ${index + 1}`}
+                {entry.institution || entry.degree || `Education ${index + 1}`}
               </div>
               <div className="entry-actions">
                 <button
@@ -76,23 +76,23 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
               <div className="entry-content">
                 <div className="form-grid">
                   <div className="form-field">
-                    <label>Position</label>
+                    <label>Institution</label>
                     <input
                       type="text"
-                      value={entry.position}
-                      onChange={(e) => handleChange(entry.id, 'position', e.target.value)}
-                      placeholder="Software Engineer"
+                      value={entry.institution}
+                      onChange={(e) => handleChange(entry.id, 'institution', e.target.value)}
+                      placeholder="Harvard University"
                       className="input"
                     />
                   </div>
 
                   <div className="form-field">
-                    <label>Company</label>
+                    <label>Degree</label>
                     <input
                       type="text"
-                      value={entry.company}
-                      onChange={(e) => handleChange(entry.id, 'company', e.target.value)}
-                      placeholder="TechCorp"
+                      value={entry.degree}
+                      onChange={(e) => handleChange(entry.id, 'degree', e.target.value)}
+                      placeholder="Bachelor of Science in Computer Science"
                       className="input"
                     />
                   </div>
@@ -103,40 +103,40 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
                       type="text"
                       value={entry.location}
                       onChange={(e) => handleChange(entry.id, 'location', e.target.value)}
-                      placeholder="San Francisco, CA"
+                      placeholder="Cambridge, MA"
                       className="input"
                     />
                   </div>
 
                   <div className="form-field">
-                    <label>Start Date</label>
+                    <label>Graduation Date</label>
                     <input
                       type="text"
-                      value={entry.startDate}
-                      onChange={(e) => handleChange(entry.id, 'startDate', e.target.value)}
-                      placeholder="01/2023"
+                      value={entry.graduationDate}
+                      onChange={(e) => handleChange(entry.id, 'graduationDate', e.target.value)}
+                      placeholder="May 2024"
                       className="input"
                     />
                   </div>
 
                   <div className="form-field">
-                    <label>End Date</label>
+                    <label>GPA (optional)</label>
                     <input
                       type="text"
-                      value={entry.endDate}
-                      onChange={(e) => handleChange(entry.id, 'endDate', e.target.value)}
-                      placeholder="Present"
+                      value={entry.gpa || ''}
+                      onChange={(e) => handleChange(entry.id, 'gpa', e.target.value)}
+                      placeholder="3.9/4.0"
                       className="input"
                     />
                   </div>
                 </div>
 
                 <div className="form-field full-width">
-                  <label>Description</label>
+                  <label>Achievements (optional)</label>
                   <RichTextEditor
-                    value={entry.description}
-                    onChange={(markdown) => handleChange(entry.id, 'description', markdown)}
-                    placeholder="- Developed features that improved user engagement by 25%&#10;- Led team of 5 engineers..."
+                    value={entry.achievements || ''}
+                    onChange={(markdown) => handleChange(entry.id, 'achievements', markdown)}
+                    placeholder="- Dean's List all semesters&#10;- President of Computer Science Club"
                   />
                 </div>
               </div>
@@ -147,7 +147,7 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
 
       <button type="button" onClick={handleAdd} className="btn-add">
         <Plus size={16} />
-        Add Experience
+        Add Education
       </button>
     </div>
   );

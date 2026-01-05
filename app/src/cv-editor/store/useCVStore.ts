@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Resume, ProfileData, ExperienceEntry, EducationEntry, CertificationEntry, LanguageEntry, SkillsData } from '../types/resume';
-import { createEmptyResume } from '../types/resume';
+import type { Resume, ProfileData, ExperienceEntry, EducationEntry, CertificationEntry, LanguageEntry, SkillsData } from '@/shared/types/resume';
+import { createEmptyResume } from '@/shared/types/resume';
 
 interface CVState {
   // State

@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react';
-import type { LanguageEntry } from '../../types/resume';
-import { createLanguageEntry } from '../../types/resume';
+import type { LanguageEntry } from '@/shared/types/resume';
+import { createLanguageEntry } from '@/shared/types/resume';
 
 interface LanguagesSectionProps {
   entries: LanguageEntry[];

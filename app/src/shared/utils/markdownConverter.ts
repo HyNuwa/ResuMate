@@ -1,4 +1,5 @@
-import type { Resume, ExperienceEntry, EducationEntry, SkillCategory } from '../types/resume';
+import type { Resume, ExperienceEntry, EducationEntry, SkillCategory } from '@/shared/types/resume';
+import { createCVMetadata } from '@/shared/types/resume';
 
 /**
  * Convert Resume object to Markdown string
@@ -149,6 +150,7 @@ export function markdownToResume(markdown: string): Resume {
   const lines = markdown.split('\n');
   
   const resume: Resume = {
+    metadata: createCVMetadata('Imported CV'),
     profile: {
       fullName: '',
       email: '',
@@ -159,6 +161,9 @@ export function markdownToResume(markdown: string): Resume {
     experience: [],
     education: [],
     skills: { categories: [] },
+    certifications: [],
+    languages: [],
+    enabledCategories: ['profile'], // Start with profile enabled by default
   };
 
   // Extract name from first # heading

@@ -1,8 +1,8 @@
 import React from 'react';
 import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
-import { ResumeDocument } from './ResumeDocument';
+import { ResumeDocument } from '@/cv-editor/components/ResumeDocument';
 import { Download, Eye } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '@/lib/utils';
 
 interface ResultPreviewProps {
   data: {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { SkillsData, SkillCategory } from '../../types/resume';
-import { createSkillCategory } from '../../types/resume';
+import type { SkillsData, SkillCategory } from '@/shared/types/resume';
+import { createSkillCategory } from '@/shared/types/resume';
 import { Plus, X, Trash2 } from 'lucide-react';
 
 interface SkillsSectionProps {

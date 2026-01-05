@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import type { EducationEntry } from '../../types/resume';
-import { createEducationEntry } from '../../types/resume';
-import { RichTextEditor } from '../common/RichTextEditor';
+import type { ExperienceEntry } from '@/shared/types/resume';
+import { createExperienceEntry } from '@/shared/types/resume';
+import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 
-interface EducationSectionProps {
-  entries: EducationEntry[];
-  onChange: (entries: EducationEntry[]) => void;
+interface ExperienceSectionProps {
+  entries: ExperienceEntry[];
+  onChange: (entries: ExperienceEntry[]) => void;
 }
 
-export function EducationSection({ entries, onChange }: EducationSectionProps) {
+export function ExperienceSection({ entries, onChange }: ExperienceSectionProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(entries.map(e => e.id)));
 
   const toggleExpanded = (id: string) => {
@@ -25,7 +25,7 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
   };
 
   const handleAdd = () => {
-    const newEntry = createEducationEntry();
+    const newEntry = createExperienceEntry();
     onChange([...entries, newEntry]);
     setExpandedIds(prev => new Set([...prev, newEntry.id]));
   };
@@ -39,20 +39,20 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
     });
   };
 
-  const handleChange = (id: string, field: keyof EducationEntry, value: string) => {
+  const handleChange = (id: string, field: keyof ExperienceEntry, value: string) => {
     onChange(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
   };
 
   return (
     <div className="cv-section">
-      <h2 className="section-title">Education</h2>
+      <h2 className="section-title">Experience</h2>
       
       <div className="entries-list">
         {entries.map((entry, index) => (
           <div key={entry.id} className="entry-card">
             <div className="entry-header" onClick={() => toggleExpanded(entry.id)}>
               <div className="entry-title">
-                {entry.institution || entry.degree || `Education ${index + 1}`}
+                {entry.position || entry.company || `Experience ${index + 1}`}
               </div>
               <div className="entry-actions">
                 <button
@@ -76,23 +76,23 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
               <div className="entry-content">
                 <div className="form-grid">
                   <div className="form-field">
-                    <label>Institution</label>
+                    <label>Position</label>
                     <input
                       type="text"
-                      value={entry.institution}
-                      onChange={(e) => handleChange(entry.id, 'institution', e.target.value)}
-                      placeholder="Harvard University"
+                      value={entry.position}
+                      onChange={(e) => handleChange(entry.id, 'position', e.target.value)}
+                      placeholder="Software Engineer"
                       className="input"
                     />
                   </div>
 
                   <div className="form-field">
-                    <label>Degree</label>
+                    <label>Company</label>
                     <input
                       type="text"
-                      value={entry.degree}
-                      onChange={(e) => handleChange(entry.id, 'degree', e.target.value)}
-                      placeholder="Bachelor of Science in Computer Science"
+                      value={entry.company}
+                      onChange={(e) => handleChange(entry.id, 'company', e.target.value)}
+                      placeholder="TechCorp"
                       className="input"
                     />
                   </div>
@@ -103,40 +103,40 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
                       type="text"
                       value={entry.location}
                       onChange={(e) => handleChange(entry.id, 'location', e.target.value)}
-                      placeholder="Cambridge, MA"
+                      placeholder="San Francisco, CA"
                       className="input"
                     />
                   </div>
 
                   <div className="form-field">
-                    <label>Graduation Date</label>
+                    <label>Start Date</label>
                     <input
                       type="text"
-                      value={entry.graduationDate}
-                      onChange={(e) => handleChange(entry.id, 'graduationDate', e.target.value)}
-                      placeholder="May 2024"
+                      value={entry.startDate}
+                      onChange={(e) => handleChange(entry.id, 'startDate', e.target.value)}
+                      placeholder="01/2023"
                       className="input"
                     />
                   </div>
 
                   <div className="form-field">
-                    <label>GPA (optional)</label>
+                    <label>End Date</label>
                     <input
                       type="text"
-                      value={entry.gpa || ''}
-                      onChange={(e) => handleChange(entry.id, 'gpa', e.target.value)}
-                      placeholder="3.9/4.0"
+                      value={entry.endDate}
+                      onChange={(e) => handleChange(entry.id, 'endDate', e.target.value)}
+                      placeholder="Present"
                       className="input"
                     />
                   </div>
                 </div>
 
                 <div className="form-field full-width">
-                  <label>Achievements (optional)</label>
+                  <label>Description</label>
                   <RichTextEditor
-                    value={entry.achievements || ''}
-                    onChange={(markdown) => handleChange(entry.id, 'achievements', markdown)}
-                    placeholder="- Dean's List all semesters&#10;- President of Computer Science Club"
+                    value={entry.description}
+                    onChange={(markdown) => handleChange(entry.id, 'description', markdown)}
+                    placeholder="- Developed features that improved user engagement by 25%&#10;- Led team of 5 engineers..."
                   />
                 </div>
               </div>
@@ -147,7 +147,7 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
 
       <button type="button" onClick={handleAdd} className="btn-add">
         <Plus size={16} />
-        Add Education
+        Add Experience
       </button>
     </div>
   );

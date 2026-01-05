@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { htmlToMarkdown, markdownToHtml } from '@/shared/utils/markdownConverter';
+import { htmlToMarkdown, markdownToHtml } from '../../utils/markdownConverter';
 import { Bold, Italic, List } from 'lucide-react';
 
 interface RichTextEditorProps {

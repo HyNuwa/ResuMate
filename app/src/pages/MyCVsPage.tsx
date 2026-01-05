@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { MyCVsPage as MyCVsPageComponent } from '../components/MyCVsPage';
-import type { Resume } from '../types/resume';
+import { MyCVsPage as MyCVsPageComponent } from '../cv-list/components';
+import type { Resume } from '../shared/types/resume';
 
 export function MyCVsPage() {
   const navigate = useNavigate();
