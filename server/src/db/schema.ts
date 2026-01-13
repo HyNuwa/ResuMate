@@ -47,6 +47,21 @@ export const userCvs = pgTable('user_cvs', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// Tabla para knowledge base (RAG de CRITERIOS)
+export const knowledgeBase = pgTable('knowledge_base', {
+  id: serial('id').primaryKey(),
+  type: text('type').notNull(), // 'job_requirements' | 'ats_best_practices' | 'tech_trends'
+  role: text('role'), // 'Frontend Developer', 'Backend Engineer', etc.
+  seniority: text('seniority'), // 'Junior', 'Mid', 'Senior'
+  category: text('category'), // 'skills', 'formatting', 'keywords', 'responsibilities'
+  content: text('content').notNull(),
+  embedding: vector('embedding', { dimensions: 768 }), // gemini-embedding-001 (768 dims)
+  source: text('source'), // 'Manual', 'Indeed', 'GitHub Trends', URL
+  confidence: integer('confidence').default(100), // 0-100 score
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // Relaciones
 export const resumesRelations = relations(resumes, ({ many }) => ({
   chunks: many(resumeChunks),
@@ -79,4 +94,7 @@ export type NewOptimization = typeof optimizations.$inferInsert;
 
 export type UserCv = typeof userCvs.$inferSelect;
 export type NewUserCv = typeof userCvs.$inferInsert;
+
+export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+export type NewKnowledgeBase = typeof knowledgeBase.$inferInsert;
 

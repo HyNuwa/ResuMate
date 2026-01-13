@@ -2,9 +2,9 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
-// OpenRouter configurado como OpenAI con base URL custom
+// Gemini 2.0 Flash Exp via OpenRouter (FREE)
 const createLLM = () => new ChatOpenAI({
-  modelName: process.env.LLM_MODEL || "groq/llama-3.3-70b-versatile",
+  modelName: process.env.LLM_MODEL || "google/gemini-2.0-flash-exp:free",
   openAIApiKey: process.env.OPENROUTER_API_KEY,
   configuration: {
     baseURL: "https://openrouter.ai/api/v1",

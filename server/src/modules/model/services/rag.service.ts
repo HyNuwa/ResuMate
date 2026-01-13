@@ -1,15 +1,15 @@
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { pool } from '../../../config/database';
 
-// Usando HuggingFace con modelo BGE-M3 optimizado para RAG multilingüe
-// Debug: verificar que el token se está leyendo
-const hfApiKey = process.env.HUGGINGFACE_API_KEY || "hf_demo";
-console.log('🔑 HuggingFace API Key:', hfApiKey ? `${hfApiKey.substring(0, 10)}...` : 'NOT SET');
-
-const embeddings = new HuggingFaceInferenceEmbeddings({
-  model: "BAAI/bge-m3", // 1024 dimensiones, mejor para español+inglés híbrido
-  apiKey: hfApiKey,
+// Gemini Embeddings via OpenRouter (OpenAI-compatible)
+const embeddings = new OpenAIEmbeddings({
+  modelName: "google/gemini-embedding-001",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  configuration: {
+    baseURL: "https://openrouter.ai/api/v1",
+  },
+  dimensions: 768, // Optimized for storage/performance
 });
 
 /**
@@ -118,9 +118,6 @@ export async function findRelevantExperience(resumeId: number, jobDescription: s
   }
 }
 
-/**
- * Guarda una optimización en la DB
- */
 export async function saveOptimization(resumeId: number, jobDescription: string, optimizedContent: string, keywords: string[], model: string | undefined): Promise<number> {
   try {
     const result = await pool.query(
@@ -135,4 +132,53 @@ export async function saveOptimization(resumeId: number, jobDescription: string,
     console.error('Error saving optimization:', error);
     throw error;
   }
+}
+
+/**
+ * NUEVO: Multi-source RAG - Combina chunks del CV del usuario con knowledge base
+ */
+export async function getOptimizationContext(params: {
+  resumeId: number;
+  resumeText: string;
+  jobDescription: string;
+  detectedRole: string;
+  detectedSeniority?: string;
+}): Promise<{
+  userExperience: RelevantChunk[];
+  marketCriteria: any[];
+  atsBestPractices: any[];
+  techTrends: any[];
+}> {
+  const { findRelevantCriteria, getATSBestPractices, getTechTrends } = 
+    await import('../../knowledge/index.js');
+  
+  // 1. User CV chunks (existing RAG)
+  const userExperience = await findRelevantExperience(
+    params.resumeId,
+    params.jobDescription,
+    3
+  );
+  
+  // 2. NUEVO: Market criteria from knowledge base
+  const marketCriteria = await findRelevantCriteria({
+    role: params.detectedRole,
+    seniority: params.detectedSeniority,
+    queryText: params.jobDescription,
+    topK: 3
+  });
+  
+  // 3. NUEVO: ATS best practices
+  const atsBestPractices = await getATSBestPractices();
+  
+  // 4. NUEVO: Tech trends
+  const techTrends = await getTechTrends();
+  
+  console.log(`📊 Context: ${userExperience.length} CV chunks + ${marketCriteria.length} market criteria + ${atsBestPractices.length} ATS rules + ${techTrends.length} trends`);
+  
+  return {
+    userExperience,
+    marketCriteria,
+    atsBestPractices,
+    techTrends
+  };
 }
