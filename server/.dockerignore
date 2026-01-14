@@ -1,0 +1,45 @@
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Test
+coverage/
+.nyc_output/
+
+# Uploads (se montan como volumen)
+uploads/
+
+# Git
+.git/
+.gitignore
+
+# Migrations (se copian explícitamente en el Dockerfile)
+migrations/
+
+# Misc
+*.md
+!README.md

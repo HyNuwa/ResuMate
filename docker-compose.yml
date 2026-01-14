@@ -1,0 +1,188 @@
+version: '3.8'
+
+# ==========================================
+# ResuMate - Multi-Container Architecture
+# ==========================================
+# Orquesta 4 servicios independientes:
+# 1. PostgreSQL + pgvector (Base de datos)
+# 2. Python Scraper (FastAPI + Crawl4AI)
+# 3. Node.js Backend (Express + Drizzle)
+# 4. React Frontend (Vite)
+
+services:
+  # ==========================================
+  # 1. BASE DE DATOS (PostgreSQL + pgvector)
+  # ==========================================
+  db:
+    image: ankane/pgvector:latest
+    container_name: resumate-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password123}
+      POSTGRES_DB: ${DB_NAME:-resumate}
+
+    ports:
+      # Exponer en localhost:5432 para acceso desde tu máquina
+      - "5432:5432"
+
+    volumes:
+      # Volumen nombrado para persistencia de datos
+      # Los datos sobreviven aunque borres el contenedor
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      # Docker verifica que PostgreSQL está listo para aceptar conexiones
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - resumate-network
+
+  # ==========================================
+  # 2. SCRAPER MICROSERVICE (Python + Crawl4AI)
+  # ==========================================
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+
+    container_name: resumate-scraper
+    restart: unless-stopped
+
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - ENV=production
+
+    ports:
+      # Exponer en localhost:8000
+      - "8000:8000"
+
+    healthcheck:
+      # Verifica que FastAPI responde en /health
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s # Dar tiempo a Playwright para inicializar
+
+    networks:
+      - resumate-network
+
+  # ==========================================
+  # 3. BACKEND (Node.js + Express + Drizzle)
+  # ==========================================
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+
+    container_name: resumate-server
+    restart: unless-stopped
+
+    # No iniciar hasta que db y scraper estén saludables
+    depends_on:
+      db:
+        condition: service_healthy
+      scraper:
+        condition: service_healthy
+
+    environment:
+      # Conectar a la DB usando el nombre del servicio 'db' como host
+      # Docker resuelve 'db' a la IP interna del contenedor
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password123}@db:5432/${DB_NAME:-resumate}
+
+      # Variables individuales de DB para drizzle
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-password123}
+      DB_NAME: ${DB_NAME:-resumate}
+
+      # URL del scraper (comunicación interna entre contenedores)
+      SCRAPER_URL: http://scraper:8000
+
+      # API Keys
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+
+      # Config
+      NODE_ENV: ${NODE_ENV:-development}
+      APP_URL: ${APP_URL:-http://localhost:5173}
+      APP_NAME: ResuMate
+      PORT: 3000
+
+    ports:
+      # Exponer API en localhost:3000
+      - "3000:3000"
+
+    volumes:
+      # Persistir archivos subidos (CVs)
+      - ./server/uploads:/app/uploads
+
+      # En desarrollo: sincronizar código para hot-reload
+      # Comentar estas líneas en producción
+      - ./server/src:/app/src:ro # ro = read-only
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s # Dar tiempo a las migraciones
+
+    networks:
+      - resumate-network
+
+  # ==========================================
+  # 4. FRONTEND (React + Vite)
+  # ==========================================
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+
+    container_name: resumate-app
+    restart: unless-stopped
+
+    # Esperar a que el backend esté listo
+    depends_on:
+      server:
+        condition: service_healthy
+
+    environment:
+      # URL de la API (desde el navegador del usuario, no Docker)
+      - VITE_API_URL=http://localhost:3000
+
+    ports:
+      # Exponer frontend en localhost:5173
+      - "5173:5173"
+
+    volumes:
+      # En desarrollo: sincronizar código para hot-reload
+      # Comentar en producción
+      - ./app/src:/app/src:ro
+      - ./app/public:/app/public:ro
+
+    networks:
+      - resumate-network
+
+# ==========================================
+# REDES
+# ==========================================
+networks:
+  resumate-network:
+    driver: bridge
+    # Red interna Docker para que los servicios se comuniquen
+
+    # ==========================================
+    # VOLÚMENES (Persistencia de datos)
+    # ==========================================
+volumes:
+  pgdata:
+    # PostgreSQL guarda aquí la base de datos
+    # Sobrevive aunque ejecutes `docker-compose down`
+    # Para borrar: `docker-compose down -v` (CUIDADO: borra la DB)
+    driver: local
