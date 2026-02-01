@@ -23,12 +23,15 @@ import { Request } from 'express';
 // ==================================================
 import resumeRoutes from './modules/model/routes/resumes.routes';
 import cvSyncRoutes from './modules/cv-sync/routes/cv-sync.routes';
+import scraperRoutes from './modules/scraper/scraper.routes';
+import cronRoutes from './modules/cron/cron.routes';
 
 // ==================================================
 // Importaciones de utilidades y configuraciones
 // ==================================================
 import { GeoUtils } from './modules/utils/geo_utils';
 import { initDatabase } from './config/database';
+import { cronJobService } from './modules/cron';
 
 // ==================================================
 // Extensiones de tipos para librerías externas
@@ -226,6 +229,8 @@ app.use((req, res, next) => {
 // --------------------------
 app.use('/api/resume', resumeRoutes);
 app.use('/api/cv-sync', cvSyncRoutes);
+app.use('/api/scraper', scraperRoutes);
+app.use('/api/cron', cronRoutes);
 
 // --------------------------
 // 7.2 Health Check
@@ -315,6 +320,9 @@ const server = app.listen(PORT, async () => {
     console.log('Entorno:', process.env.NODE_ENV || 'development');
     console.log('Estado geolocalización:', GeoUtils.checkServiceStatus());
     console.log('🤖 Model:', process.env.LLM_MODEL || 'no configurado');
+    
+    // Iniciar cron jobs
+    cronJobService.start();
   } catch (error: any) {
     console.error('❌ Error al inicializar:', error.message);
   }
