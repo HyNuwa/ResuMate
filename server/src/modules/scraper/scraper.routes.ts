@@ -48,6 +48,53 @@ router.post('/extract-job', async (req, res) => {
 });
 
 /**
+ * POST /api/scraper/extract-cv
+ * Extrae información profesional de un perfil (GitHub, LinkedIn, portfolio)
+ * 
+ * Body: {
+ *   url: string,
+ *   use_llm?: boolean (default: true),
+ *   bypass_cache?: boolean (default: false)
+ * }
+ * 
+ * Returns:
+ * - markdown: string (always present, for RAG ingestion)
+ * - structured_data: CVData (optional, if LLM succeeds)
+ * - metadata: extraction stats
+ */
+router.post('/extract-cv', async (req, res) => {
+  try {
+    const { url, use_llm = true, bypass_cache = false } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+    
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+    
+    const result = await scraperService.extractCVProfile(url, use_llm, bypass_cache);
+    
+    // Return appropriate status based on success
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+    
+    res.json(result);
+  } catch (error: any) {
+    console.error('Extract CV error:', error);
+    res.status(500).json({
+      error: 'Failed to extract CV profile',
+      message: error.message
+    });
+  }
+});
+
+/**
  * POST /api/scraper/extract-multiple
  * Extrae datos de múltiples ofertas de empleo
  * 

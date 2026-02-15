@@ -36,6 +36,46 @@ export interface ExtractJobResponse {
   error?: string;
 }
 
+// ==========================================
+// CV Extraction Types
+// ==========================================
+
+export interface CVData {
+  full_name?: string;
+  summary?: string;
+  contact_info?: string;
+  job_titles: string[];
+  companies: string[];
+  experience_details: string[];
+  technical_skills: string[];
+  languages: string[];
+  frameworks: string[];
+  tools: string[];
+  degrees: string[];
+  institutions: string[];
+}
+
+export interface CVExtractionRequest {
+  url: string;
+  use_llm?: boolean;
+  bypass_cache?: boolean;
+}
+
+export interface CVExtractionResponse {
+  success: boolean;
+  url: string;
+  markdown: string;
+  structured_data?: CVData;
+  metadata: {
+    markdown_length: number;
+    has_structured_data: boolean;
+    llm_attempted: boolean;
+    warnings_count: number;
+  };
+  error?: string;
+  warnings: string[];
+}
+
 /**
  * Servicio para interactuar con el microservicio de scraping
  */
@@ -123,6 +163,56 @@ export class ScraperService {
     }
     
     return results;
+  }
+
+  /**
+   * Extrae datos de un perfil profesional (GitHub, LinkedIn, portfolio)
+   * @param url - URL del perfil profesional
+   * @param use_llm - Si usar LLM para extracción estructurada (default: true)
+   * @param bypass_cache - Forzar scraping fresco (default: false)
+   * @returns Markdown + structured data (si LLM tiene éxito)
+   */
+  async extractCVProfile(
+    url: string,
+    use_llm: boolean = true,
+    bypass_cache: boolean = false
+  ): Promise<CVExtractionResponse> {
+    try {
+      console.log(`🔍 Extracting CV profile: ${url}`);
+      
+      const response = await axios.post<CVExtractionResponse>(
+        `${this.baseUrl}/extract-cv`,
+        { url, use_llm, bypass_cache },
+        { timeout: 60000 } // 60s timeout (LLM + crawling puede tardar)
+      );
+      
+      const result = response.data;
+      
+      if (!result.success) {
+        console.error(`❌ CV extraction failed: ${result.error}`);
+      } else {
+        console.log(`✅ CV extracted: ${result.metadata.markdown_length} chars markdown, structured: ${result.metadata.has_structured_data}`);
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error(`Failed to extract CV from ${url}:`, error.message);
+      
+      // Return failed response with error details
+      return {
+        success: false,
+        url,
+        markdown: '',
+        metadata: {
+          markdown_length: 0,
+          has_structured_data: false,
+          llm_attempted: use_llm,
+          warnings_count: 0
+        },
+        error: error.response?.data?.detail || error.message,
+        warnings: []
+      };
+    }
   }
 
   /**
