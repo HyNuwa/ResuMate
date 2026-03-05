@@ -1,11 +1,30 @@
-import { useMemo } from 'react';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FormBasedEditor } from '../cv-editor/components';
+import { TemplatePicker } from '../cv-editor/components/TemplatePicker';
 import { createEmptyResume } from '../shared/types/resume';
+import type { Resume } from '../shared/types/resume';
+import type { TemplateId } from '../templates';
+
+type LayoutVariant = 'standard' | 'compact';
 
 export function CreateCVPage() {
-  // Memoize initialCV to prevent creating a new empty CV on every render
-  // This was causing FormBasedEditor's useEffect to reset user data
-  const initialCV = useMemo(() => createEmptyResume(), []);
-  
+  const navigate = useNavigate();
+  const [initialCV, setInitialCV] = useState<Resume | null>(null);
+
+  const handleApply = useCallback((templateId: TemplateId, layout: LayoutVariant) => {
+    const cv = createEmptyResume();
+    cv.metadata = { ...cv.metadata, template: templateId, layoutVariant: layout };
+    setInitialCV(cv);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    navigate('/my-cvs');
+  }, [navigate]);
+
+  if (!initialCV) {
+    return <TemplatePicker onApply={handleApply} onCancel={handleCancel} />;
+  }
+
   return <FormBasedEditor initialCV={initialCV} />;
 }

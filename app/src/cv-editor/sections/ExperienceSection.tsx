@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ExperienceEntry } from '@/shared/types/resume';
 import { createExperienceEntry } from '@/shared/types/resume';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
+import { MonthYearPicker } from '@/components/common/MonthYearPicker';
 import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 
 interface ExperienceSectionProps {
@@ -110,23 +111,19 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
 
                   <div className="form-field">
                     <label>Start Date</label>
-                    <input
-                      type="text"
+                    <MonthYearPicker
                       value={entry.startDate}
-                      onChange={(e) => handleChange(entry.id, 'startDate', e.target.value)}
-                      placeholder="01/2023"
-                      className="input"
+                      onChange={(v) => handleChange(entry.id, 'startDate', v)}
                     />
                   </div>
 
                   <div className="form-field">
                     <label>End Date</label>
-                    <input
-                      type="text"
+                    <MonthYearPicker
                       value={entry.endDate}
-                      onChange={(e) => handleChange(entry.id, 'endDate', e.target.value)}
-                      placeholder="Present"
-                      className="input"
+                      onChange={(v) => handleChange(entry.id, 'endDate', v)}
+                      allowPresent
+                      presentLabel="Present"
                     />
                   </div>
                 </div>

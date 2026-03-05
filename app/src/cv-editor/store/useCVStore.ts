@@ -18,6 +18,7 @@ interface CVState {
   updateTitle: (title: string) => void;
   addCategory: (categoryId: string) => void;
   removeCategory: (categoryId: string) => void;
+  reorderCategories: (newOrder: string[]) => void;
   resetToNew: () => void;
 }
 
@@ -82,6 +83,14 @@ export const useCVStore = create<CVState>((set) => ({
         enabledCategories: state.resume.enabledCategories.filter(
           (id) => id !== categoryId
         ),
+      },
+    })),
+
+  reorderCategories: (newOrder) =>
+    set((state) => ({
+      resume: {
+        ...state.resume,
+        enabledCategories: newOrder,
       },
     })),
 

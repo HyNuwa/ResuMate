@@ -2,6 +2,7 @@ import { Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { CertificationEntry } from '@/shared/types/resume';
 import { createCertificationEntry } from '@/shared/types/resume';
+import { MonthYearPicker } from '@/components/common/MonthYearPicker';
 
 interface CertificationsSectionProps {
   entries: CertificationEntry[];
@@ -104,23 +105,19 @@ export function CertificationsSection({ entries, onChange }: CertificationsSecti
 
                     <div className="form-field">
                       <label>Fecha de Emisión</label>
-                      <input
-                        type="text"
-                        className="input"
+                      <MonthYearPicker
                         value={entry.issueDate}
-                        onChange={(e) => handleUpdate(entry.id, 'issueDate', e.target.value)}
-                        placeholder="ej: Enero 2023"
+                        onChange={(v) => handleUpdate(entry.id, 'issueDate', v)}
                       />
                     </div>
 
                     <div className="form-field">
                       <label>Fecha de Vencimiento (Opcional)</label>
-                      <input
-                        type="text"
-                        className="input"
+                      <MonthYearPicker
                         value={entry.expirationDate || ''}
-                        onChange={(e) => handleUpdate(entry.id, 'expirationDate', e.target.value)}
-                        placeholder="ej: Enero 2026"
+                        onChange={(v) => handleUpdate(entry.id, 'expirationDate', v)}
+                        allowPresent
+                        presentLabel="No expiry"
                       />
                     </div>
 

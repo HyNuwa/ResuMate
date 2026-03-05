@@ -56,6 +56,7 @@ export function FormBasedEditor({ initialCV, onSave, isExistingCV = false }: For
   const updateTitle = useCVStore((state) => state.updateTitle);
   const addCategory = useCVStore((state) => state.addCategory);
   const removeCategory = useCVStore((state) => state.removeCategory);
+  const reorderCategories = useCVStore((state) => state.reorderCategories);
 
   // Mutations
   const createCVMutation = useCreateCV();
@@ -158,6 +159,7 @@ export function FormBasedEditor({ initialCV, onSave, isExistingCV = false }: For
             onCertificationsChange={(newCerts) => handleChange(() => updateCertifications(newCerts))}
             onLanguagesChange={(newLangs) => handleChange(() => updateLanguages(newLangs))}
             onRemoveCategory={handleRemoveCategory}
+            onReorderCategories={(newOrder) => handleChange(() => reorderCategories(newOrder))}
           />
 
           {/* Add Category Button */}
@@ -172,7 +174,7 @@ export function FormBasedEditor({ initialCV, onSave, isExistingCV = false }: For
       </div>
 
       {/* Right Panels - Preview and Metrics */}
-      <ResumePreview resume={resume} />
+      <ResumePreview resume={resume} enabledCategories={enabledCategories} />
       <ResumeMetrics score={43} />
 
       {/* Category Selector Modal */}

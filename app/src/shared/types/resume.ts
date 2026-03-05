@@ -2,6 +2,8 @@
 export interface CVMetadata {
   id: string;
   title: string;
+  template?: string; // Template ID chosen at creation (e.g. 'jake-ryan', 'harvard')
+  layoutVariant?: 'standard' | 'compact'; // Spacing density
   createdAt: string;
   updatedAt: string;
 }
@@ -125,9 +127,10 @@ export const createSkillCategory = (): SkillCategory => ({
 });
 
 // Create CV metadata
-export const createCVMetadata = (title: string = 'Untitled CV'): CVMetadata => ({
+export const createCVMetadata = (title: string = 'Untitled CV', template?: string): CVMetadata => ({
   id: crypto.randomUUID(),
   title,
+  template,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });

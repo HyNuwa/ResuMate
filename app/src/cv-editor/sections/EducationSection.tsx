@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { EducationEntry } from '@/shared/types/resume';
 import { createEducationEntry } from '@/shared/types/resume';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
+import { MonthYearPicker } from '@/components/common/MonthYearPicker';
 import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 
 interface EducationSectionProps {
@@ -110,12 +111,9 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
 
                   <div className="form-field">
                     <label>Graduation Date</label>
-                    <input
-                      type="text"
+                    <MonthYearPicker
                       value={entry.graduationDate}
-                      onChange={(e) => handleChange(entry.id, 'graduationDate', e.target.value)}
-                      placeholder="May 2024"
-                      className="input"
+                      onChange={(v) => handleChange(entry.id, 'graduationDate', v)}
                     />
                   </div>
 

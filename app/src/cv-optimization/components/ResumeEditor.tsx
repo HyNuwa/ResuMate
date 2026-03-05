@@ -1,119 +1,80 @@
-import { useEffect, useRef, useState } from 'react';
-import { Crepe } from '@milkdown/crepe';
-import '@milkdown/crepe/theme/common/style.css';
-import '@milkdown/crepe/theme/frame.css';
+/**
+ * ResumeEditor - Legacy markdown-based editor used in the CV Optimization flow.
+ * Migrated from Milkdown/Crepe to Tiptap after @milkdown packages were removed.
+ */
+import { useEffect, useRef } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
 import { HARVARD_TEMPLATE_MARKDOWN } from '@/templates/HarvardTemplate';
 import '@/styles/resume-editor.css';
-import { Download } from 'lucide-react';
+import { Download, Bold, Italic, List } from 'lucide-react';
+
+// Minimal markdown→HTML for initial content rendering
+function markdownToHtml(md: string): string {
+  if (!md) return '';
+  return md
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    .split('\n')
+    .map(line => {
+      if (line.startsWith('<h') || line.startsWith('<hr') || line.trim() === '') return line;
+      if (line.trim().startsWith('- ')) return `<li>${line.trim().slice(2)}</li>`;
+      return `<p>${line}</p>`;
+    })
+    .join('');
+}
+
+// Minimal HTML→markdown for export
+function htmlToMarkdown(html: string): string {
+  return html
+    .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+    .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1')
+    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1')
+    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1')
+    .replace(/<hr\s*\/?>/gi, '---')
+    .replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1')
+    .replace(/<ul[^>]*>(.*?)<\/ul>/gis, '$1')
+    .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 export function ResumeEditor() {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const crepeRef = useRef<Crepe | null>(null);
-  const [markdown, setMarkdown] = useState(HARVARD_TEMPLATE_MARKDOWN);
-  const [isExporting, setIsExporting] = useState(false);
+  const isExportingRef = useRef(false);
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+      Placeholder.configure({ placeholder: 'Start editing your resume...' }),
+    ],
+    content: markdownToHtml(HARVARD_TEMPLATE_MARKDOWN),
+  });
+
+  // Cleanup on unmount
   useEffect(() => {
-    if (!editorRef.current || crepeRef.current) return;
-
-    let destroyed = false;
-    // Clear the root to prevent any leftover DOM from previous attempts
-    editorRef.current.innerHTML = '';
-
-    const crepe = new Crepe({
-      root: editorRef.current,
-      defaultValue: HARVARD_TEMPLATE_MARKDOWN,
-    });
-
-    crepe.create().then(() => {
-      // Check if component was unmounted while crepe was being created
-      if (destroyed) {
-        crepe.destroy();
-        return;
-      }
-      
-      crepeRef.current = crepe;
-      
-      // Use proper Crepe API to listen for markdown updates
-      crepe.on((listener) => {
-        listener.markdownUpdated((_, markdown) => {
-          setMarkdown(markdown);
-        });
-      });
-    }).catch((error) => {
-      console.error('Failed to create Crepe editor:', error);
-    });
-
-    return () => {
-      destroyed = true;
-      if (crepeRef.current) {
-        crepeRef.current.destroy();
-        crepeRef.current = null;
-      }
-    };
-  }, []);
+    return () => { editor?.destroy(); };
+  }, [editor]);
 
   const handleExportPDF = () => {
-    setIsExporting(true);
-    
-    // Use browser's print functionality for PDF export
+    if (isExportingRef.current) return;
+    isExportingRef.current = true;
     setTimeout(() => {
       window.print();
-      setIsExporting(false);
+      isExportingRef.current = false;
     }, 100);
   };
 
-  // Convert markdown to HTML for preview
-  const renderMarkdownPreview = (md: string) => {
-    // Simple markdown to HTML conversion for preview
-    let html = md
-      // Headers
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      // Bold
-      .replace(/\*\*([^*]+)\*\*/gim, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*([^*]+)\*/gim, '<em>$1</em>')
-      // Horizontal rule
-      .replace(/^---$/gim, '<hr>')
-      // Line breaks
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
-
-    // Handle lists
-    const lines = md.split('\n');
-    let inList = false;
-    let result = '';
-    
-    for (let line of lines) {
-      if (line.trim().startsWith('- ')) {
-        if (!inList) {
-          result += '<ul>';
-          inList = true;
-        }
-        result += `<li>${line.trim().substring(2)}</li>`;
-      } else {
-        if (inList) {
-          result += '</ul>';
-          inList = false;
-        }
-        result += line + '\n';
-      }
-    }
-    
-    if (inList) result += '</ul>';
-    
-    // Apply standard replacements to the result
-    html = result
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      .replace(/\*\*([^*]+)\*\*/gim, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/gim, '<em>$1</em>')
-      .replace(/^---$/gim, '<hr>')
-      .replace(/\n\n/g, '</p><p>');
-
-    return html;
+  const getMarkdown = () => {
+    if (!editor) return '';
+    return htmlToMarkdown(editor.getHTML());
   };
 
   return (
@@ -122,27 +83,37 @@ export function ResumeEditor() {
       <div className="editor-panel">
         <div className="editor-header">
           <h3>Edit Your Resume</h3>
+          <div className="editor-toolbar">
+            <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()}
+              className={`toolbar-btn${editor?.isActive('bold') ? ' is-active' : ''}`} title="Bold">
+              <Bold size={16} />
+            </button>
+            <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()}
+              className={`toolbar-btn${editor?.isActive('italic') ? ' is-active' : ''}`} title="Italic">
+              <Italic size={16} />
+            </button>
+            <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              className={`toolbar-btn${editor?.isActive('bulletList') ? ' is-active' : ''}`} title="Bullet List">
+              <List size={16} />
+            </button>
+          </div>
         </div>
-        <div className="milkdown-editor" ref={editorRef} />
+        <EditorContent editor={editor} className="milkdown-editor tiptap-editor" />
       </div>
 
       {/* Preview Panel */}
       <div className="preview-panel">
         <div className="preview-header">
           <h3>Preview</h3>
-          <button 
-            onClick={handleExportPDF}
-            disabled={isExporting}
-            className="export-button"
-          >
+          <button onClick={handleExportPDF} className="export-button">
             <Download size={16} />
-            {isExporting ? 'Exporting...' : 'Export PDF'}
+            Export PDF
           </button>
         </div>
         <div className="preview-content">
-          <div 
+          <div
             className="preview-document"
-            dangerouslySetInnerHTML={{ __html: renderMarkdownPreview(markdown) }}
+            dangerouslySetInnerHTML={{ __html: editor ? editor.getHTML() : markdownToHtml(HARVARD_TEMPLATE_MARKDOWN) }}
           />
         </div>
       </div>
