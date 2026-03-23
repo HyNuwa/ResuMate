@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FormBasedEditor } from '../cv-editor/components';
-import { TemplatePicker } from '../cv-editor/components/TemplatePicker';
-import { createEmptyResume } from '../shared/types/resume';
-import type { Resume } from '../shared/types/resume';
-import type { TemplateId } from '../templates';
+import { FormBasedEditor } from '@/features/resume/components';
+import { TemplatePicker } from '@/features/resume/components/components/TemplatePicker';
+import { createEmptyResume } from '@/shared/types/resume';
+import type { Resume } from '@/shared/types/resume';
+import type { TemplateId } from '@/templates';
 
 type LayoutVariant = 'standard' | 'compact';
 
@@ -26,5 +26,5 @@ export function CreateCVPage() {
     return <TemplatePicker onApply={handleApply} onCancel={handleCancel} />;
   }
 
-  return <FormBasedEditor initialCV={initialCV} />;
+  return <FormBasedEditor />;
 }

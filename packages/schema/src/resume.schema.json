@@ -1,0 +1,658 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumate.dev/schema/resume/v1",
+  "$version": "1.0.0",
+  "type": "object",
+  "description": "ResuMate resume data schema v1.0.0",
+  "properties": {
+    "picture": { "$ref": "#/$defs/picture" },
+    "basics":  { "$ref": "#/$defs/basics" },
+    "summary": { "$ref": "#/$defs/summary" },
+    "sections": { "$ref": "#/$defs/sections" },
+    "customSections": { "$ref": "#/$defs/customSections" },
+    "metadata": { "$ref": "#/$defs/metadata" }
+  },
+  "required": ["picture", "basics", "summary", "sections", "customSections", "metadata"],
+  "additionalProperties": false,
+  "$defs": {
+    "url": {
+      "type": "object",
+      "properties": {
+        "url":   { "type": "string", "description": "The URL. Must include protocol (http:// or https://)." },
+        "label": { "type": "string", "description": "Display label; leave blank to show the URL as-is." }
+      },
+      "required": ["url", "label"],
+      "additionalProperties": false
+    },
+    "itemOptions": {
+      "type": "object",
+      "properties": {
+        "showLinkInTitle": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the website URL is rendered as a hyperlink on the title."
+        }
+      },
+      "required": ["showLinkInTitle"],
+      "additionalProperties": false
+    },
+    "picture": {
+      "type": "object",
+      "description": "Configuration for photograph displayed on the resume",
+      "properties": {
+        "hidden":       { "type": "boolean" },
+        "url":          { "type": "string" },
+        "size":         { "type": "number", "minimum": 32, "maximum": 512 },
+        "rotation":     { "type": "number", "minimum": 0, "maximum": 360 },
+        "aspectRatio":  { "type": "number", "minimum": 0.5, "maximum": 2.5 },
+        "borderRadius": { "type": "number", "minimum": 0, "maximum": 100 },
+        "borderColor":  { "type": "string" },
+        "borderWidth":  { "type": "number", "minimum": 0 },
+        "shadowColor":  { "type": "string" },
+        "shadowWidth":  { "type": "number", "minimum": 0 }
+      },
+      "required": ["hidden", "url", "size", "rotation", "aspectRatio", "borderRadius", "borderColor", "borderWidth", "shadowColor", "shadowWidth"],
+      "additionalProperties": false
+    },
+    "basics": {
+      "type": "object",
+      "description": "Basic contact information about the resume author",
+      "properties": {
+        "name":     { "type": "string", "description": "Full name of the author." },
+        "headline": { "type": "string", "description": "Professional headline or title." },
+        "email":    { "type": "string", "description": "Email address." },
+        "phone":    { "type": "string", "description": "Phone number." },
+        "location": { "type": "string", "description": "Location (city, country)." },
+        "website":  { "$ref": "#/$defs/url" },
+        "customFields": {
+          "type": "array",
+          "description": "Additional custom contact fields.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id":   { "type": "string" },
+              "icon": { "type": "string" },
+              "text": { "type": "string" },
+              "link": { "type": "string", "default": "" }
+            },
+            "required": ["id", "icon", "text", "link"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["name", "headline", "email", "phone", "location", "website", "customFields"],
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "description": "Professional summary / bio section",
+      "properties": {
+        "title":   { "type": "string" },
+        "columns": { "type": "number" },
+        "hidden":  { "type": "boolean" },
+        "content": { "type": "string", "description": "HTML-formatted summary content." }
+      },
+      "required": ["title", "columns", "hidden", "content"],
+      "additionalProperties": false
+    },
+    "profileItem": {
+      "type": "object",
+      "properties": {
+        "id":      { "type": "string" },
+        "hidden":  { "type": "boolean" },
+        "options": { "$ref": "#/$defs/itemOptions" },
+        "icon":    { "type": "string" },
+        "network": { "type": "string", "minLength": 1 },
+        "username":{ "type": "string" },
+        "website": { "$ref": "#/$defs/url" }
+      },
+      "required": ["id", "hidden", "icon", "network", "username", "website"],
+      "additionalProperties": false
+    },
+    "role": {
+      "type": "object",
+      "description": "A single role within a multi-role experience entry",
+      "properties": {
+        "id":          { "type": "string" },
+        "position":    { "type": "string" },
+        "period":      { "type": "string" },
+        "description": { "type": "string", "description": "HTML-formatted role description." }
+      },
+      "required": ["id", "position", "period", "description"],
+      "additionalProperties": false
+    },
+    "experienceItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "company":     { "type": "string", "minLength": 1 },
+        "position":    { "type": "string" },
+        "location":    { "type": "string" },
+        "period":      { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "description": { "type": "string", "description": "HTML-formatted description." },
+        "roles":       { "type": "array", "items": { "$ref": "#/$defs/role" }, "default": [] }
+      },
+      "required": ["id", "hidden", "company", "position", "location", "period", "website", "description", "roles"],
+      "additionalProperties": false
+    },
+    "educationItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "school":      { "type": "string", "minLength": 1 },
+        "degree":      { "type": "string" },
+        "area":        { "type": "string" },
+        "grade":       { "type": "string" },
+        "location":    { "type": "string" },
+        "period":      { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "description": { "type": "string", "description": "HTML-formatted description." }
+      },
+      "required": ["id", "hidden", "school", "degree", "area", "grade", "location", "period", "website", "description"],
+      "additionalProperties": false
+    },
+    "projectItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "name":        { "type": "string", "minLength": 1 },
+        "period":      { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "description": { "type": "string", "description": "HTML-formatted description." }
+      },
+      "required": ["id", "hidden", "name", "period", "website", "description"],
+      "additionalProperties": false
+    },
+    "skillItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "icon":        { "type": "string" },
+        "name":        { "type": "string", "minLength": 1 },
+        "proficiency": { "type": "string" },
+        "level":       { "type": "number", "minimum": 0, "maximum": 5, "default": 0 },
+        "keywords":    { "type": "array", "items": { "type": "string" }, "default": [] }
+      },
+      "required": ["id", "hidden", "icon", "name", "proficiency", "level", "keywords"],
+      "additionalProperties": false
+    },
+    "languageItem": {
+      "type": "object",
+      "properties": {
+        "id":      { "type": "string" },
+        "hidden":  { "type": "boolean" },
+        "options": { "$ref": "#/$defs/itemOptions" },
+        "language":{ "type": "string", "minLength": 1 },
+        "fluency": { "type": "string" },
+        "level":   { "type": "number", "minimum": 0, "maximum": 5, "default": 0 }
+      },
+      "required": ["id", "hidden", "language", "fluency", "level"],
+      "additionalProperties": false
+    },
+    "interestItem": {
+      "type": "object",
+      "properties": {
+        "id":       { "type": "string" },
+        "hidden":   { "type": "boolean" },
+        "options":  { "$ref": "#/$defs/itemOptions" },
+        "icon":     { "type": "string" },
+        "name":     { "type": "string", "minLength": 1 },
+        "keywords": { "type": "array", "items": { "type": "string" }, "default": [] }
+      },
+      "required": ["id", "hidden", "icon", "name", "keywords"],
+      "additionalProperties": false
+    },
+    "awardItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "title":       { "type": "string", "minLength": 1 },
+        "awarder":     { "type": "string" },
+        "date":        { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "description": { "type": "string", "description": "HTML-formatted description." }
+      },
+      "required": ["id", "hidden", "title", "awarder", "date", "website", "description"],
+      "additionalProperties": false
+    },
+    "certificationItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "title":       { "type": "string", "minLength": 1 },
+        "issuer":      { "type": "string" },
+        "date":        { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "description": { "type": "string", "description": "HTML-formatted description." }
+      },
+      "required": ["id", "hidden", "title", "issuer", "date", "website", "description"],
+      "additionalProperties": false
+    },
+    "publicationItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "title":       { "type": "string", "minLength": 1 },
+        "publisher":   { "type": "string" },
+        "date":        { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "description": { "type": "string", "description": "HTML-formatted description." }
+      },
+      "required": ["id", "hidden", "title", "publisher", "date", "website", "description"],
+      "additionalProperties": false
+    },
+    "volunteerItem": {
+      "type": "object",
+      "properties": {
+        "id":           { "type": "string" },
+        "hidden":       { "type": "boolean" },
+        "options":      { "$ref": "#/$defs/itemOptions" },
+        "organization": { "type": "string", "minLength": 1 },
+        "location":     { "type": "string" },
+        "period":       { "type": "string" },
+        "website":      { "$ref": "#/$defs/url" },
+        "description":  { "type": "string", "description": "HTML-formatted description." }
+      },
+      "required": ["id", "hidden", "organization", "location", "period", "website", "description"],
+      "additionalProperties": false
+    },
+    "referenceItem": {
+      "type": "object",
+      "properties": {
+        "id":          { "type": "string" },
+        "hidden":      { "type": "boolean" },
+        "options":     { "$ref": "#/$defs/itemOptions" },
+        "name":        { "type": "string", "minLength": 1 },
+        "position":    { "type": "string" },
+        "website":     { "$ref": "#/$defs/url" },
+        "phone":       { "type": "string" },
+        "description": { "type": "string", "description": "HTML-formatted quote or note." }
+      },
+      "required": ["id", "hidden", "name", "position", "website", "phone", "description"],
+      "additionalProperties": false
+    },
+    "sectionBase": {
+      "type": "object",
+      "description": "Base properties shared by every section",
+      "properties": {
+        "title":   { "type": "string" },
+        "columns": { "type": "number" },
+        "hidden":  { "type": "boolean" }
+      },
+      "required": ["title", "columns", "hidden"]
+    },
+    "sections": {
+      "type": "object",
+      "description": "Standard sections of the resume",
+      "properties": {
+        "profiles": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/profileItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Social / professional profiles section"
+        },
+        "experience": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/experienceItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Work experience section"
+        },
+        "education": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/educationItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Education section"
+        },
+        "projects": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/projectItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Projects section"
+        },
+        "skills": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/skillItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Skills section"
+        },
+        "languages": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/languageItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Languages section"
+        },
+        "interests": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/interestItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Interests / hobbies section"
+        },
+        "awards": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/awardItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Awards section"
+        },
+        "certifications": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/certificationItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Certifications section"
+        },
+        "publications": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/publicationItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Publications section"
+        },
+        "volunteer": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/volunteerItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "Volunteer experience section"
+        },
+        "references": {
+          "allOf": [
+            { "$ref": "#/$defs/sectionBase" },
+            {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": { "$ref": "#/$defs/referenceItem" } }
+              },
+              "required": ["items"]
+            }
+          ],
+          "additionalProperties": false,
+          "description": "References section"
+        }
+      },
+      "required": [
+        "profiles", "experience", "education", "projects",
+        "skills", "languages", "interests", "awards",
+        "certifications", "publications", "volunteer", "references"
+      ],
+      "additionalProperties": false
+    },
+    "customSectionItemType": {
+      "type": "string",
+      "enum": [
+        "summary", "profiles", "experience", "education", "projects",
+        "skills", "languages", "interests", "awards",
+        "certifications", "publications", "volunteer", "references",
+        "cover-letter"
+      ]
+    },
+    "customSections": {
+      "type": "array",
+      "description": "User-defined custom sections that reuse any standard item type",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id":      { "type": "string" },
+          "title":   { "type": "string" },
+          "columns": { "type": "number" },
+          "hidden":  { "type": "boolean" },
+          "type":    { "$ref": "#/$defs/customSectionItemType" },
+          "items": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "$ref": "#/$defs/profileItem" },
+                { "$ref": "#/$defs/experienceItem" },
+                { "$ref": "#/$defs/educationItem" },
+                { "$ref": "#/$defs/projectItem" },
+                { "$ref": "#/$defs/skillItem" },
+                { "$ref": "#/$defs/languageItem" },
+                { "$ref": "#/$defs/interestItem" },
+                { "$ref": "#/$defs/awardItem" },
+                { "$ref": "#/$defs/certificationItem" },
+                { "$ref": "#/$defs/publicationItem" },
+                { "$ref": "#/$defs/volunteerItem" },
+                { "$ref": "#/$defs/referenceItem" },
+                {
+                  "type": "object",
+                  "description": "Cover letter item",
+                  "properties": {
+                    "id":        { "type": "string" },
+                    "hidden":    { "type": "boolean" },
+                    "options":   { "$ref": "#/$defs/itemOptions" },
+                    "recipient": { "type": "string" },
+                    "content":   { "type": "string" }
+                  },
+                  "required": ["id", "hidden", "recipient", "content"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          }
+        },
+        "required": ["id", "title", "columns", "hidden", "type", "items"],
+        "additionalProperties": false
+      }
+    },
+    "layoutPage": {
+      "type": "object",
+      "properties": {
+        "fullWidth": { "type": "boolean" },
+        "main":      { "type": "array", "items": { "type": "string" } },
+        "sidebar":   { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["fullWidth", "main", "sidebar"],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Resume appearance and configuration metadata",
+      "properties": {
+        "template": {
+          "type": "string",
+          "default": "classic",
+          "description": "Template identifier. Determines overall design and appearance."
+        },
+        "layout": {
+          "type": "object",
+          "properties": {
+            "sidebarWidth": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 50,
+              "default": 35,
+              "description": "Width of the sidebar as a % of page width."
+            },
+            "pages": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/layoutPage" }
+            }
+          },
+          "required": ["sidebarWidth", "pages"],
+          "additionalProperties": false
+        },
+        "css": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "value":   { "type": "string" }
+          },
+          "required": ["enabled", "value"],
+          "additionalProperties": false
+        },
+        "page": {
+          "type": "object",
+          "properties": {
+            "format":    { "type": "string", "enum": ["a4", "letter", "free-form"], "default": "a4" },
+            "locale":    { "type": "string", "default": "en-US" },
+            "marginX":   { "type": "number", "minimum": 0 },
+            "marginY":   { "type": "number", "minimum": 0 },
+            "gapX":      { "type": "number", "minimum": 0 },
+            "gapY":      { "type": "number", "minimum": 0 },
+            "hideIcons": { "type": "boolean", "default": false }
+          },
+          "required": ["format", "locale", "marginX", "marginY", "gapX", "gapY", "hideIcons"],
+          "additionalProperties": false
+        },
+        "design": {
+          "type": "object",
+          "properties": {
+            "colors": {
+              "type": "object",
+              "properties": {
+                "primary":    { "type": "string", "description": "rgba(r,g,b,a)" },
+                "text":       { "type": "string", "description": "rgba(r,g,b,a)" },
+                "background": { "type": "string", "description": "rgba(r,g,b,a)" }
+              },
+              "required": ["primary", "text", "background"],
+              "additionalProperties": false
+            },
+            "level": {
+              "type": "object",
+              "properties": {
+                "icon": { "type": "string" },
+                "type": {
+                  "type": "string",
+                  "enum": ["hidden", "circle", "square", "rectangle", "rectangle-full", "progress-bar", "icon"]
+                }
+              },
+              "required": ["icon", "type"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["colors", "level"],
+          "additionalProperties": false
+        },
+        "typography": {
+          "type": "object",
+          "properties": {
+            "body":    { "$ref": "#/$defs/fontStyle" },
+            "heading": { "$ref": "#/$defs/fontStyle" }
+          },
+          "required": ["body", "heading"],
+          "additionalProperties": false
+        },
+        "notes": {
+          "type": "string",
+          "description": "Private notes for the author (not shown on the resume). HTML-formatted."
+        }
+      },
+      "required": ["template", "layout", "css", "page", "design", "typography", "notes"],
+      "additionalProperties": false
+    },
+    "fontStyle": {
+      "type": "object",
+      "properties": {
+        "fontFamily":  { "type": "string", "description": "Google Fonts family name." },
+        "fontWeights": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["100","200","300","400","500","600","700","800","900"] },
+          "default": ["400"]
+        },
+        "fontSize":   { "type": "number", "minimum": 6, "maximum": 24, "default": 11 },
+        "lineHeight": { "type": "number", "minimum": 0.5, "maximum": 4, "default": 1.5 }
+      },
+      "required": ["fontFamily", "fontWeights", "fontSize", "lineHeight"],
+      "additionalProperties": false
+    }
+  }
+}

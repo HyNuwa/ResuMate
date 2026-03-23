@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "search": "Search",
+    "noResults": "No results",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "nav": {
+    "myCvs": "My CVs",
+    "create": "Create CV",
+    "optimize": "Optimize"
+  },
+  "dashboard": {
+    "title": "My Resumes",
+    "newCv": "New CV",
+    "importCv": "Import CV",
+    "empty": "You don't have any resumes yet. Create your first one!",
+    "searchPlaceholder": "Search resumes...",
+    "deleteConfirm": "Delete this resume?"
+  },
+  "editor": {
+    "preview": "Preview",
+    "sections": "Sections",
+    "settings": "Settings",
+    "undo": "Undo",
+    "redo": "Redo",
+    "saveIndicator": {
+      "idle": "No changes",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "error": "Save failed"
+    },
+    "addSection": "Add section",
+    "removeSection": "Remove section"
+  },
+  "sections": {
+    "profile": {
+      "fullName": "Full name",
+      "headline": "Professional headline",
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location",
+      "website": "Website",
+      "summary": "Professional summary"
+    },
+    "experience": {
+      "position": "Position",
+      "company": "Company",
+      "location": "Location",
+      "period": "Period",
+      "description": "Description",
+      "addEntry": "Add experience",
+      "addRole": "Add role"
+    },
+    "education": {
+      "institution": "Institution",
+      "degree": "Degree",
+      "field": "Field of study",
+      "location": "Location",
+      "period": "Period",
+      "grade": "Grade",
+      "addEntry": "Add education"
+    },
+    "skills": {
+      "category": "Category",
+      "addCategory": "Add category",
+      "addSkill": "Add skill"
+    },
+    "languages": {
+      "language": "Language",
+      "proficiency": "Proficiency",
+      "addLanguage": "Add language"
+    },
+    "certifications": {
+      "name": "Name",
+      "issuer": "Issuer",
+      "date": "Date",
+      "addCertification": "Add certification"
+    }
+  },
+  "templates": {
+    "title": "Templates",
+    "classic": "Classic",
+    "harvard": "Harvard",
+    "modern": "Modern",
+    "minimal": "Minimal",
+    "executive": "Executive"
+  },
+  "optimization": {
+    "title": "Optimize CV",
+    "upload": "Upload CV",
+    "jobDescription": "Job description",
+    "optimize": "Optimize",
+    "results": "Results",
+    "coverLetter": "Cover letter"
+  },
+  "settings": {
+    "typography": "Typography",
+    "design": "Design",
+    "page": "Page",
+    "font": "Font",
+    "fontSize": "Font size",
+    "primaryColor": "Primary color",
+    "backgroundColor": "Background color",
+    "pageFormat": "Page format"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Connection error. Check your internet.",
+    "notFound": "Not found",
+    "validation": "Please fill in all required fields."
+  }
+}

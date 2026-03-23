@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumate.dev/schema/sections/experience",
+  "type": "object",
+  "description": "Work experience section",
+  "properties": {
+    "title":   { "type": "string" },
+    "columns": { "type": "number" },
+    "hidden":  { "type": "boolean" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id":      { "type": "string" },
+          "hidden":  { "type": "boolean" },
+          "options": {
+            "type": "object",
+            "properties": { "showLinkInTitle": { "type": "boolean", "default": false } },
+            "required": ["showLinkInTitle"],
+            "additionalProperties": false
+          },
+          "company":     { "type": "string", "minLength": 1 },
+          "position":    { "type": "string" },
+          "location":    { "type": "string" },
+          "period":      { "type": "string" },
+          "website": {
+            "type": "object",
+            "properties": {
+              "url":   { "type": "string" },
+              "label": { "type": "string" }
+            },
+            "required": ["url", "label"],
+            "additionalProperties": false
+          },
+          "description": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id":          { "type": "string" },
+                "position":    { "type": "string" },
+                "period":      { "type": "string" },
+                "description": { "type": "string" }
+              },
+              "required": ["id", "position", "period", "description"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["id", "hidden", "company", "position", "location", "period", "website", "description", "roles"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["title", "columns", "hidden", "items"],
+  "additionalProperties": false
+}

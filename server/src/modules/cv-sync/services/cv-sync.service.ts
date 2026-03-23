@@ -32,7 +32,7 @@ export const getAllCVs = async (req: Request, res: Response): Promise<any> => {
  */
 export const getCVById = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const id = req.params['id'] as string;
     
     const cv = await db.select().from(userCvs).where(eq(userCvs.id, id)).limit(1);
     
@@ -70,11 +70,9 @@ export const createCV = async (req: Request, res: Response): Promise<any> => {
     }
     
     const newCv = await db.insert(userCvs).values({
-      id: cvData.metadata.id,
-      title: cvData.metadata.title,
+      title: cvData.metadata?.title ?? 'Untitled CV',
       data: cvData,
-      createdAt: new Date(cvData.metadata.createdAt),
-      updatedAt: new Date(cvData.metadata.updatedAt)
+      schemaVersion: '1.0.0',
     }).returning();
     
     res.status(201).json({
@@ -117,25 +115,24 @@ export const updateCV = async (req: Request, res: Response): Promise<any> => {
     cvData.metadata.updatedAt = new Date().toISOString();
     
     // First try to update
+    const cvId = req.params['id'] as string;
     const updatedCv = await db.update(userCvs)
       .set({
-        title: cvData.metadata.title,
+        title: cvData.metadata?.title ?? 'Untitled CV',
         data: cvData,
         updatedAt: new Date()
       })
-      .where(eq(userCvs.id, id))
+      .where(eq(userCvs.id, cvId))
       .returning();
     
     // If CV doesn't exist, create it
     if (updatedCv.length === 0) {
-      console.log(`CV ${id} not found, creating it...`);
+      console.log(`CV ${cvId} not found, creating it...`);
       
       const newCv = await db.insert(userCvs).values({
-        id: id,
-        title: cvData.metadata.title,
+        title: cvData.metadata?.title ?? 'Untitled CV',
         data: cvData,
-        createdAt: cvData.metadata.createdAt ? new Date(cvData.metadata.createdAt) : new Date(),
-        updatedAt: new Date()
+        schemaVersion: '1.0.0',
       }).returning();
       
       return res.status(201).json({
@@ -165,8 +162,9 @@ export const deleteCV = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
     
+    const deleteId = req.params['id'] as string;
     const deletedCv = await db.delete(userCvs)
-      .where(eq(userCvs.id, id))
+      .where(eq(userCvs.id, deleteId))
       .returning();
     
     if (deletedCv.length === 0) {

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { FormBasedEditor } from '../cv-editor/components';
+import { FormBasedEditor } from '@/features/resume/components';
 import { useCV } from '../shared/hooks/useQueryCVs';
 
 export function CVEditorPage() {
@@ -38,5 +38,5 @@ export function CVEditorPage() {
     );
   }
   
-  return <FormBasedEditor initialCV={cv} isExistingCV={true} />;
+  return <FormBasedEditor />;
 }

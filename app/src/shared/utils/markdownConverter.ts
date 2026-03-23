@@ -1,4 +1,4 @@
-import type { Resume, ExperienceEntry, EducationEntry, SkillCategory } from '@/shared/types/resume';
+import type { Resume } from '@/shared/types/resume';
 import { createCVMetadata } from '@/shared/types/resume';
 
 /**

@@ -29,24 +29,6 @@ function markdownToHtml(md: string): string {
     .join('');
 }
 
-// Minimal HTML→markdown for export
-function htmlToMarkdown(html: string): string {
-  return html
-    .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-    .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1')
-    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1')
-    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1')
-    .replace(/<hr\s*\/?>/gi, '---')
-    .replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1')
-    .replace(/<ul[^>]*>(.*?)<\/ul>/gis, '$1')
-    .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
 export function ResumeEditor() {
   const isExportingRef = useRef(false);
 
@@ -70,11 +52,6 @@ export function ResumeEditor() {
       window.print();
       isExportingRef.current = false;
     }, 100);
-  };
-
-  const getMarkdown = () => {
-    if (!editor) return '';
-    return htmlToMarkdown(editor.getHTML());
   };
 
   return (

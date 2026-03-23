@@ -1,7 +1,82 @@
-import { pgTable, serial, text, integer, timestamp, jsonb, vector, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  serial,
+  text,
+  integer,
+  timestamp,
+  jsonb,
+  vector,
+  uuid,
+  boolean,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Tabla para almacenar CVs parseados
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 1 tables (Fase 1 — Schema & DB)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Users — authentication and profile information.
+ * Auth (Fase 2) will add password_hash and OAuth fields on top.
+ */
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').unique().notNull(),
+  passwordHash: text('password_hash'),
+  name: text('name'),
+  locale: text('locale').default('en').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/**
+ * user_cvs — the core table storing resume documents.
+ *
+ * Key changes vs. original:
+ *  - user_id FK to users
+ *  - slug for shareable URLs
+ *  - schema_version to track which @resumate/schema version the data conforms to
+ *  - visibility: private | public | link
+ *  - password_hash for link-protected CVs
+ *  - view_count / locale
+ */
+export const userCvs = pgTable('user_cvs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  title: text('title').notNull().default('Untitled CV'),
+  slug: text('slug').unique(),
+  schemaVersion: text('schema_version').notNull().default('1.0.0'),
+  /** Validated ResumeData object (see @resumate/schema) */
+  data: jsonb('data').notNull(),
+  visibility: text('visibility', { enum: ['private', 'public', 'link'] })
+    .notNull()
+    .default('private'),
+  passwordHash: text('password_hash'),
+  viewCount: integer('view_count').notNull().default(0),
+  locale: text('locale').notNull().default('en'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/**
+ * cv_views — anonymous tracking of shareable CV views.
+ * IP is hashed before storage (privacy-first).
+ */
+export const cvViews = pgTable('cv_views', {
+  id: serial('id').primaryKey(),
+  cvId: uuid('cv_id')
+    .references(() => userCvs.id, { onDelete: 'cascade' })
+    .notNull(),
+  viewerIpHash: text('viewer_ip_hash'),
+  userAgent: text('user_agent'),
+  viewedAt: timestamp('viewed_at').notNull().defaultNow(),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Legacy / AI tables (unchanged, kept for backward compat during refactor)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Stores raw parsed CV text (used by the Python scraper / RAG pipeline). */
 export const resumes = pgTable('resumes', {
   id: serial('id').primaryKey(),
   userId: text('user_id').default('anonymous').notNull(),
@@ -12,20 +87,20 @@ export const resumes = pgTable('resumes', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// Tabla para chunks de CV con embeddings vectoriales
+/** Vector chunks for the RAG pipeline. */
 export const resumeChunks = pgTable('resume_chunks', {
   id: serial('id').primaryKey(),
   resumeId: integer('resume_id')
     .references(() => resumes.id, { onDelete: 'cascade' })
     .notNull(),
   content: text('content').notNull(),
-  embedding: vector('embedding', { dimensions: 1024 }), // BAAI/bge-m3 - optimized for multilingual RAG
+  embedding: vector('embedding', { dimensions: 1024 }),
   chunkIndex: integer('chunk_index'),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Tabla para optimizaciones generadas
+/** AI optimization results. */
 export const optimizations = pgTable('optimizations', {
   id: serial('id').primaryKey(),
   resumeId: integer('resume_id')
@@ -38,31 +113,44 @@ export const optimizations = pgTable('optimizations', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Tabla para CVs creados manualmente por usuarios
-export const userCvs = pgTable('user_cvs', {
-  id: uuid('id').primaryKey(),
-  title: text('title').notNull().default('Untitled CV'),
-  data: jsonb('data').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-// Tabla para knowledge base (RAG de CRITERIOS)
+/** RAG knowledge base for ATS criteria. */
 export const knowledgeBase = pgTable('knowledge_base', {
   id: serial('id').primaryKey(),
-  type: text('type').notNull(), // 'job_requirements' | 'ats_best_practices' | 'tech_trends'
-  role: text('role'), // 'Frontend Developer', 'Backend Engineer', etc.
-  seniority: text('seniority'), // 'Junior', 'Mid', 'Senior'
-  category: text('category'), // 'skills', 'formatting', 'keywords', 'responsibilities'
+  type: text('type').notNull(),
+  role: text('role'),
+  seniority: text('seniority'),
+  category: text('category'),
   content: text('content').notNull(),
-  embedding: vector('embedding', { dimensions: 768 }), // gemini-embedding-001 (768 dims)
-  source: text('source'), // 'Manual', 'Indeed', 'GitHub Trends', URL
-  confidence: integer('confidence').default(100), // 0-100 score
+  embedding: vector('embedding', { dimensions: 768 }),
+  source: text('source'),
+  confidence: integer('confidence').default(100),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// Relaciones
+// ─────────────────────────────────────────────────────────────────────────────
+// Relations
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cvs: many(userCvs),
+}));
+
+export const userCvsRelations = relations(userCvs, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userCvs.userId],
+    references: [users.id],
+  }),
+  views: many(cvViews),
+}));
+
+export const cvViewsRelations = relations(cvViews, ({ one }) => ({
+  cv: one(userCvs, {
+    fields: [cvViews.cvId],
+    references: [userCvs.id],
+  }),
+}));
+
 export const resumesRelations = relations(resumes, ({ many }) => ({
   chunks: many(resumeChunks),
   optimizations: many(optimizations),
@@ -82,7 +170,19 @@ export const optimizationsRelations = relations(optimizations, ({ one }) => ({
   }),
 }));
 
-// Types para TypeScript
+// ─────────────────────────────────────────────────────────────────────────────
+// Inferred TypeScript types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+
+export type UserCv = typeof userCvs.$inferSelect;
+export type NewUserCv = typeof userCvs.$inferInsert;
+
+export type CvView = typeof cvViews.$inferSelect;
+export type NewCvView = typeof cvViews.$inferInsert;
+
 export type Resume = typeof resumes.$inferSelect;
 export type NewResume = typeof resumes.$inferInsert;
 
@@ -92,9 +192,5 @@ export type NewResumeChunk = typeof resumeChunks.$inferInsert;
 export type Optimization = typeof optimizations.$inferSelect;
 export type NewOptimization = typeof optimizations.$inferInsert;
 
-export type UserCv = typeof userCvs.$inferSelect;
-export type NewUserCv = typeof userCvs.$inferInsert;
-
 export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
 export type NewKnowledgeBase = typeof knowledgeBase.$inferInsert;
-

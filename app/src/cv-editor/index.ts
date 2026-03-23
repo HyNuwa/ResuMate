@@ -1,1 +1,1 @@
-export { useCVStore, selectResume, selectProfile, selectExperience, selectEducation, selectSkills, selectCertifications, selectLanguages, selectTitle, selectEnabledCategories } from './store/useCVStore';
+export { useCVStore, selectResume, selectProfile, selectExperience, selectEducation, selectSkills, selectCertifications, selectLanguages, selectTitle, selectEnabledCategories } from '../features/resume/stores/legacy/useCVStore';

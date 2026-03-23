@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumate.dev/schema/sections/basics",
+  "type": "object",
+  "description": "Basic contact information about the resume author",
+  "properties": {
+    "name":     { "type": "string", "description": "Full name of the author." },
+    "headline": { "type": "string", "description": "Professional headline or title." },
+    "email":    { "type": "string", "description": "Email address." },
+    "phone":    { "type": "string", "description": "Phone number." },
+    "location": { "type": "string", "description": "Location (city, country)." },
+    "website": {
+      "type": "object",
+      "properties": {
+        "url":   { "type": "string" },
+        "label": { "type": "string" }
+      },
+      "required": ["url", "label"],
+      "additionalProperties": false
+    },
+    "customFields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id":   { "type": "string" },
+          "icon": { "type": "string" },
+          "text": { "type": "string" },
+          "link": { "type": "string", "default": "" }
+        },
+        "required": ["id", "icon", "text", "link"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["name", "headline", "email", "phone", "location", "website", "customFields"],
+  "additionalProperties": false
+}

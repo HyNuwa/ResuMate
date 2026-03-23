@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumate.dev/schema/sections/metadata",
+  "type": "object",
+  "description": "Resume appearance and configuration metadata",
+  "properties": {
+    "template": {
+      "type": "string",
+      "default": "classic",
+      "description": "Template identifier."
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "sidebarWidth": { "type": "number", "minimum": 10, "maximum": 50, "default": 35 },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fullWidth": { "type": "boolean" },
+              "main":      { "type": "array", "items": { "type": "string" } },
+              "sidebar":   { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["fullWidth", "main", "sidebar"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["sidebarWidth", "pages"],
+      "additionalProperties": false
+    },
+    "css": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "value":   { "type": "string" }
+      },
+      "required": ["enabled", "value"],
+      "additionalProperties": false
+    },
+    "page": {
+      "type": "object",
+      "properties": {
+        "format":    { "type": "string", "enum": ["a4", "letter", "free-form"], "default": "a4" },
+        "locale":    { "type": "string", "default": "en-US" },
+        "marginX":   { "type": "number", "minimum": 0 },
+        "marginY":   { "type": "number", "minimum": 0 },
+        "gapX":      { "type": "number", "minimum": 0 },
+        "gapY":      { "type": "number", "minimum": 0 },
+        "hideIcons": { "type": "boolean", "default": false }
+      },
+      "required": ["format", "locale", "marginX", "marginY", "gapX", "gapY", "hideIcons"],
+      "additionalProperties": false
+    },
+    "design": {
+      "type": "object",
+      "properties": {
+        "colors": {
+          "type": "object",
+          "properties": {
+            "primary":    { "type": "string" },
+            "text":       { "type": "string" },
+            "background": { "type": "string" }
+          },
+          "required": ["primary", "text", "background"],
+          "additionalProperties": false
+        },
+        "level": {
+          "type": "object",
+          "properties": {
+            "icon": { "type": "string" },
+            "type": {
+              "type": "string",
+              "enum": ["hidden", "circle", "square", "rectangle", "rectangle-full", "progress-bar", "icon"]
+            }
+          },
+          "required": ["icon", "type"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["colors", "level"],
+      "additionalProperties": false
+    },
+    "typography": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "fontFamily":  { "type": "string" },
+            "fontWeights": { "type": "array", "items": { "type": "string" }, "default": ["400"] },
+            "fontSize":    { "type": "number", "minimum": 6, "maximum": 24, "default": 11 },
+            "lineHeight":  { "type": "number", "minimum": 0.5, "maximum": 4, "default": 1.5 }
+          },
+          "required": ["fontFamily", "fontWeights", "fontSize", "lineHeight"],
+          "additionalProperties": false
+        },
+        "heading": {
+          "type": "object",
+          "properties": {
+            "fontFamily":  { "type": "string" },
+            "fontWeights": { "type": "array", "items": { "type": "string" }, "default": ["400"] },
+            "fontSize":    { "type": "number", "minimum": 6, "maximum": 24, "default": 11 },
+            "lineHeight":  { "type": "number", "minimum": 0.5, "maximum": 4, "default": 1.5 }
+          },
+          "required": ["fontFamily", "fontWeights", "fontSize", "lineHeight"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["body", "heading"],
+      "additionalProperties": false
+    },
+    "notes": { "type": "string" }
+  },
+  "required": ["template", "layout", "css", "page", "design", "typography", "notes"],
+  "additionalProperties": false
+}

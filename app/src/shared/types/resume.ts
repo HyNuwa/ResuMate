@@ -1,11 +1,66 @@
-// CV Metadata
+// ─── Typography / Design / Page settings ────────────────────────────────────
+
+export interface TypographyStyle {
+  fontFamily: string;
+  fontWeight: string;
+  fontSize: number;    // px
+  lineHeight: number;  // unitless multiplier, e.g. 1.5
+}
+
+export interface TypographySettings {
+  body: TypographyStyle;
+  heading: TypographyStyle;
+}
+
+export interface DesignSettings {
+  primary: string;     // hex
+  text: string;
+  background: string;
+}
+
+export type PageFormat = 'A4' | 'Letter' | 'Custom';
+
+export interface PageSettings {
+  language: string;    // BCP-47, e.g. 'es', 'en'
+  format: PageFormat;
+  marginH: number;     // mm
+  marginV: number;     // mm
+  spacingH: number;    // px (column gap)
+  spacingV: number;    // px (section gap)
+}
+
+export const DEFAULT_TYPOGRAPHY: TypographySettings = {
+  body:    { fontFamily: 'Inter, sans-serif', fontWeight: '400', fontSize: 13, lineHeight: 1.5 },
+  heading: { fontFamily: 'Inter, sans-serif', fontWeight: '700', fontSize: 15, lineHeight: 1.3 },
+};
+
+export const DEFAULT_DESIGN: DesignSettings = {
+  primary:    '#2563EB',
+  text:       '#111827',
+  background: '#FFFFFF',
+};
+
+export const DEFAULT_PAGE: PageSettings = {
+  language: 'es',
+  format:   'A4',
+  marginH:  16,
+  marginV:  16,
+  spacingH: 0,
+  spacingV: 12,
+};
+
+// ─── CV Metadata ─────────────────────────────────────────────────────────────
+
 export interface CVMetadata {
   id: string;
   title: string;
-  template?: string; // Template ID chosen at creation (e.g. 'jake-ryan', 'harvard')
-  layoutVariant?: 'standard' | 'compact'; // Spacing density
+  template?: string;
+  layoutVariant?: 'standard' | 'compact';
   createdAt: string;
   updatedAt: string;
+  typography?: TypographySettings;
+  design?: DesignSettings;
+  page?: PageSettings;
 }
 
 // Resume data structure

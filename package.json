@@ -1,0 +1,22 @@
+{
+  "name": "resumate-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev:app": "pnpm --filter resumate dev",
+    "dev:server": "pnpm --filter server dev",
+    "build": "pnpm --filter @resumate/schema build && pnpm --filter resumate build",
+    "build:schema": "pnpm --filter @resumate/schema build",
+    "typecheck": "pnpm --filter @resumate/schema typecheck && pnpm --filter resumate typecheck"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tiptap/pm": "3.20.0",
+      "@tiptap/core": "3.20.0"
+    }
+  }
+}

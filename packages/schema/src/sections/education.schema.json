@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumate.dev/schema/sections/education",
+  "type": "object",
+  "description": "Education section",
+  "properties": {
+    "title":   { "type": "string" },
+    "columns": { "type": "number" },
+    "hidden":  { "type": "boolean" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id":      { "type": "string" },
+          "hidden":  { "type": "boolean" },
+          "options": {
+            "type": "object",
+            "properties": { "showLinkInTitle": { "type": "boolean", "default": false } },
+            "required": ["showLinkInTitle"],
+            "additionalProperties": false
+          },
+          "school":      { "type": "string", "minLength": 1 },
+          "degree":      { "type": "string" },
+          "area":        { "type": "string" },
+          "grade":       { "type": "string" },
+          "location":    { "type": "string" },
+          "period":      { "type": "string" },
+          "website": {
+            "type": "object",
+            "properties": {
+              "url":   { "type": "string" },
+              "label": { "type": "string" }
+            },
+            "required": ["url", "label"],
+            "additionalProperties": false
+          },
+          "description": { "type": "string" }
+        },
+        "required": ["id", "hidden", "school", "degree", "area", "grade", "location", "period", "website", "description"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["title", "columns", "hidden", "items"],
+  "additionalProperties": false
+}

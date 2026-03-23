@@ -1,0 +1,135 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "search": "Buscar",
+    "noResults": "Sin resultados",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior"
+  },
+  "nav": {
+    "myCvs": "Mis CVs",
+    "create": "Crear CV",
+    "optimize": "Optimizar"
+  },
+  "dashboard": {
+    "title": "Mis Currículums",
+    "newCv": "Nuevo CV",
+    "importCv": "Importar CV",
+    "empty": "Aún no tienes ningún CV. ¡Crea tu primero!",
+    "searchPlaceholder": "Buscar CVs...",
+    "deleteConfirm": "¿Eliminar este CV?"
+  },
+  "editor": {
+    "preview": "Vista previa",
+    "sections": "Secciones",
+    "settings": "Configuración",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "saveIndicator": {
+      "idle": "Sin cambios",
+      "saving": "Guardando...",
+      "saved": "Guardado",
+      "error": "Error al guardar"
+    },
+    "addSection": "Agregar sección",
+    "removeSection": "Quitar sección",
+    "sectionTitles": {
+      "profile": "Perfil",
+      "experience": "Experiencia laboral",
+      "education": "Educación",
+      "skills": "Habilidades",
+      "certifications": "Certificaciones",
+      "languages": "Idiomas",
+      "projects": "Proyectos",
+      "interests": "Intereses",
+      "awards": "Premios",
+      "references": "Referencias"
+    }
+  },
+  "sections": {
+    "profile": {
+      "fullName": "Nombre completo",
+      "headline": "Titular profesional",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "location": "Ubicación",
+      "website": "Sitio web",
+      "summary": "Resumen profesional"
+    },
+    "experience": {
+      "position": "Puesto",
+      "company": "Empresa",
+      "location": "Ubicación",
+      "period": "Período",
+      "description": "Descripción",
+      "addEntry": "Agregar experiencia",
+      "addRole": "Agregar rol"
+    },
+    "education": {
+      "institution": "Institución",
+      "degree": "Título",
+      "field": "Campo de estudio",
+      "location": "Ubicación",
+      "period": "Período",
+      "grade": "Nota",
+      "addEntry": "Agregar educación"
+    },
+    "skills": {
+      "category": "Categoría",
+      "addCategory": "Agregar categoría",
+      "addSkill": "Agregar habilidad"
+    },
+    "languages": {
+      "language": "Idioma",
+      "proficiency": "Nivel",
+      "addLanguage": "Agregar idioma"
+    },
+    "certifications": {
+      "name": "Nombre",
+      "issuer": "Emisor",
+      "date": "Fecha",
+      "addCertification": "Agregar certificación"
+    }
+  },
+  "templates": {
+    "title": "Plantillas",
+    "classic": "Clásico",
+    "harvard": "Harvard",
+    "modern": "Moderno",
+    "minimal": "Mínimo",
+    "executive": "Ejecutivo"
+  },
+  "optimization": {
+    "title": "Optimizar CV",
+    "upload": "Subir CV",
+    "jobDescription": "Descripción del puesto",
+    "optimize": "Optimizar",
+    "results": "Resultados",
+    "coverLetter": "Carta de presentación"
+  },
+  "settings": {
+    "typography": "Tipografía",
+    "design": "Diseño",
+    "page": "Página",
+    "font": "Fuente",
+    "fontSize": "Tamaño de fuente",
+    "primaryColor": "Color principal",
+    "backgroundColor": "Color de fondo",
+    "pageFormat": "Formato de página"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Intenta de nuevo.",
+    "network": "Error de conexión. Verifica tu internet.",
+    "notFound": "No encontrado",
+    "validation": "Por favor completá todos los campos requeridos."
+  }
+}

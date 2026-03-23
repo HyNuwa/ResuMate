@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumate.dev/schema/sections/skills",
+  "type": "object",
+  "description": "Skills section",
+  "properties": {
+    "title":   { "type": "string" },
+    "columns": { "type": "number" },
+    "hidden":  { "type": "boolean" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id":      { "type": "string" },
+          "hidden":  { "type": "boolean" },
+          "options": {
+            "type": "object",
+            "properties": { "showLinkInTitle": { "type": "boolean", "default": false } },
+            "required": ["showLinkInTitle"],
+            "additionalProperties": false
+          },
+          "icon":        { "type": "string" },
+          "name":        { "type": "string", "minLength": 1 },
+          "proficiency": { "type": "string" },
+          "level":       { "type": "number", "minimum": 0, "maximum": 5, "default": 0 },
+          "keywords":    { "type": "array", "items": { "type": "string" }, "default": [] }
+        },
+        "required": ["id", "hidden", "icon", "name", "proficiency", "level", "keywords"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["title", "columns", "hidden", "items"],
+  "additionalProperties": false
+}
