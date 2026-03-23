@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import type { EducationEntry } from '@/shared/types/resume';
-import { createEducationEntry } from '@/shared/types/resume';
+import type { EducationItem } from '@resumate/schema';
+import { createEducationItem } from '@resumate/schema';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
-import { MonthYearPicker } from '@/components/common/MonthYearPicker';
 import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface EducationSectionProps {
-  entries: EducationEntry[];
-  onChange: (entries: EducationEntry[]) => void;
+  entries: EducationItem[];
+  onChange: (entries: EducationItem[]) => void;
 }
 
 export function EducationSection({ entries, onChange }: EducationSectionProps) {
@@ -25,7 +24,7 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
   };
 
   const handleAdd = () => {
-    const newEntry = createEducationEntry();
+    const newEntry = createEducationItem();
     onChange([...entries, newEntry]);
     setExpandedIds(prev => new Set([...prev, newEntry.id]));
   };
@@ -35,7 +34,7 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
     setExpandedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
   };
 
-  const handleChange = (id: string, field: keyof EducationEntry, value: string) =>
+  const handleChange = (id: string, field: keyof EducationItem, value: string) =>
     onChange(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
 
   return (
@@ -47,7 +46,7 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
           <div key={entry.id} className="entry-card">
             <div className="entry-header" onClick={() => toggleExpanded(entry.id)}>
               <div className="entry-title">
-                {entry.institution || entry.degree || `Education ${index + 1}`}
+                {entry.school || entry.degree || `Education ${index + 1}`}
               </div>
               <div className="entry-actions">
                 <Button
@@ -69,7 +68,7 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
                 <div className="form-grid">
                   <div className="form-field">
                     <Label>Institution</Label>
-                    <Input value={entry.institution} onChange={(e) => handleChange(entry.id, 'institution', e.target.value)} placeholder="Harvard University" />
+                    <Input value={entry.school} onChange={(e) => handleChange(entry.id, 'school', e.target.value)} placeholder="Harvard University" />
                   </div>
                   <div className="form-field">
                     <Label>Degree</Label>
@@ -80,19 +79,19 @@ export function EducationSection({ entries, onChange }: EducationSectionProps) {
                     <Input value={entry.location} onChange={(e) => handleChange(entry.id, 'location', e.target.value)} placeholder="Cambridge, MA" />
                   </div>
                   <div className="form-field">
-                    <Label>Graduation Date</Label>
-                    <MonthYearPicker value={entry.graduationDate} onChange={(v) => handleChange(entry.id, 'graduationDate', v)} />
+                    <Label>Period</Label>
+                    <Input value={entry.period} onChange={(e) => handleChange(entry.id, 'period', e.target.value)} placeholder="2018 - 2022" />
                   </div>
                   <div className="form-field">
-                    <Label>GPA (optional)</Label>
-                    <Input value={entry.gpa || ''} onChange={(e) => handleChange(entry.id, 'gpa', e.target.value)} placeholder="3.9/4.0" />
+                    <Label>Grade (optional)</Label>
+                    <Input value={entry.grade || ''} onChange={(e) => handleChange(entry.id, 'grade', e.target.value)} placeholder="3.9/4.0" />
                   </div>
                 </div>
                 <div className="form-field full-width mt-3">
-                  <Label>Achievements (optional)</Label>
+                  <Label>Description (optional)</Label>
                   <RichTextEditor
-                    value={entry.achievements || ''}
-                    onChange={(html) => handleChange(entry.id, 'achievements', html)}
+                    value={entry.description || ''}
+                    onChange={(html) => handleChange(entry.id, 'description', html)}
                     placeholder="Achievements, honors, relevant coursework..."
                   />
                 </div>

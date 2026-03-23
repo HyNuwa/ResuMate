@@ -1,14 +1,22 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { FormBasedEditor } from '@/features/resume/components';
-import { useCV } from '../shared/hooks/useQueryCVs';
+import { useCV } from '@/shared/hooks/useQueryCVs';
+import { useResumeStore } from '@/features/resume/stores/useResumeStore';
 
 export function CVEditorPage() {
   const { id } = useParams();
-  
-  // TanStack Query maneja loading, error, y cache automáticamente
   const { data: cv, isLoading, error } = useCV(id);
-  
+
+  const setResume = useResumeStore(s => s.setResume);
+
+  useEffect(() => {
+    if (cv?.data) {
+      setResume(cv.data);
+    }
+  }, [cv, setResume]);
+
   if (isLoading) {
     return (
       <div className="flex-1 overflow-hidden flex items-center justify-center">
@@ -19,7 +27,7 @@ export function CVEditorPage() {
       </div>
     );
   }
-  
+
   if (error || !cv) {
     return (
       <div className="flex-1 overflow-hidden flex items-center justify-center">
@@ -27,7 +35,7 @@ export function CVEditorPage() {
           <p className="text-red-600 mb-4">
             {error instanceof Error ? error.message : 'Error al cargar CV'}
           </p>
-          <button 
+          <button
             onClick={() => window.history.back()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
@@ -37,6 +45,6 @@ export function CVEditorPage() {
       </div>
     );
   }
-  
+
   return <FormBasedEditor />;
 }

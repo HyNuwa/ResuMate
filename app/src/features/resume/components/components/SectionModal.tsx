@@ -8,79 +8,77 @@ import { SkillsSection } from '../sections/sections/SkillsSection';
 import { CertificationsSection } from '../sections/sections/CertificationsSection';
 import { LanguagesSection } from '../sections/sections/LanguagesSection';
 import type {
-  Resume, ExperienceEntry, EducationEntry, SkillsData,
-  CertificationEntry, LanguageEntry,
-} from '@/shared/types/resume';
+  Basics,
+  ExperienceItem,
+  EducationItem,
+  SkillItem,
+  CertificationItem,
+  LanguageItem,
+} from '@resumate/schema';
 import {
-  createExperienceEntry, createEducationEntry, createSkillCategory,
-  createCertificationEntry, createLanguageEntry,
-} from '@/shared/types/resume';
+  createExperienceItem,
+  createEducationItem,
+  createSkillItem,
+  createCertificationItem,
+  createLanguageItem,
+} from '@resumate/schema';
 import { SECTION_META } from './CollapsibleSections';
 
 interface SectionModalProps {
   categoryId: string;
-  /** ID of the specific entry to focus, or null = add a new entry */
   targetItemId: string | null;
-  profile: Resume['profile'];
-  experience: ExperienceEntry[];
-  education: EducationEntry[];
-  skills: SkillsData;
-  certifications: CertificationEntry[];
-  languages: LanguageEntry[];
-  onProfileChange:        (p: Resume['profile']) => void;
-  onExperienceChange:     (e: ExperienceEntry[]) => void;
-  onEducationChange:      (e: EducationEntry[]) => void;
-  onSkillsChange:         (s: SkillsData) => void;
-  onCertificationsChange: (c: CertificationEntry[]) => void;
-  onLanguagesChange:      (l: LanguageEntry[]) => void;
+  basics: Basics;
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  skills: SkillItem[];
+  certifications: CertificationItem[];
+  languages: LanguageItem[];
+  onBasicsChange:        (b: Basics) => void;
+  onExperienceChange:    (e: ExperienceItem[]) => void;
+  onEducationChange:     (e: EducationItem[]) => void;
+  onSkillsChange:        (s: SkillItem[]) => void;
+  onCertificationsChange: (c: CertificationItem[]) => void;
+  onLanguagesChange:     (l: LanguageItem[]) => void;
   onClose: () => void;
 }
 
-// ── Single-entry wrappers ──────────────────────────────────────────────────────
-// Each section component operates on arrays. For single-item mode we wrap/unwrap.
-
 function SingleExperience({ entry, onChange }: {
-  entry: ExperienceEntry;
-  onChange: (e: ExperienceEntry) => void;
+  entry: ExperienceItem;
+  onChange: (e: ExperienceItem) => void;
 }) {
   return <ExperienceSection entries={[entry]} onChange={([updated]) => onChange(updated)} />;
 }
 function SingleEducation({ entry, onChange }: {
-  entry: EducationEntry;
-  onChange: (e: EducationEntry) => void;
+  entry: EducationItem;
+  onChange: (e: EducationItem) => void;
 }) {
   return <EducationSection entries={[entry]} onChange={([updated]) => onChange(updated)} />;
 }
 function SingleCertification({ entry, onChange }: {
-  entry: CertificationEntry;
-  onChange: (c: CertificationEntry) => void;
+  entry: CertificationItem;
+  onChange: (c: CertificationItem) => void;
 }) {
   return <CertificationsSection entries={[entry]} onChange={([updated]) => onChange(updated)} />;
 }
 function SingleLanguage({ entry, onChange }: {
-  entry: LanguageEntry;
-  onChange: (l: LanguageEntry) => void;
+  entry: LanguageItem;
+  onChange: (l: LanguageItem) => void;
 }) {
   return <LanguagesSection entries={[entry]} onChange={([updated]) => onChange(updated)} />;
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
-
 export function SectionModal({
   categoryId, targetItemId,
-  profile, experience, education, skills, certifications, languages,
-  onProfileChange, onExperienceChange, onEducationChange,
+  basics, experience, education, skills, certifications, languages,
+  onBasicsChange, onExperienceChange, onEducationChange,
   onSkillsChange, onCertificationsChange, onLanguagesChange,
   onClose,
 }: SectionModalProps) {
   const meta  = SECTION_META[categoryId];
-  const isNew = targetItemId === null && categoryId !== 'profile';
+  const isNew = targetItemId === null && categoryId !== 'basics';
 
-  // ── Local state per section type ──────────────────────────────
-  // Profile — always full form
-  const [localProfile, setLocalProfile] = useState(profile);
+  const [localBasics, setLocalBasics] = useState(basics);
 
-  // List sections with single-entry mode
   const initEntry = <T extends { id: string }>(
     list: T[], create: () => T,
   ): T => {
@@ -88,13 +86,13 @@ export function SectionModal({
     return list.find(x => x.id === targetItemId) ?? create();
   };
 
-  const [localExp,   setLocalExp]  = useState(() => initEntry(experience,     createExperienceEntry));
-  const [localEdu,   setLocalEdu]  = useState(() => initEntry(education,      createEducationEntry));
+  const [localExp,   setLocalExp]  = useState(() => initEntry(experience,     createExperienceItem));
+  const [localEdu,   setLocalEdu]  = useState(() => initEntry(education,      createEducationItem));
   const [localSkill, setLocalSkill]= useState(() =>
-    isNew ? createSkillCategory() : (skills.categories.find(c => c.id === targetItemId) ?? createSkillCategory())
+    isNew ? createSkillItem() : (skills.find(s => s.id === targetItemId) ?? createSkillItem())
   );
-  const [localCert,  setLocalCert] = useState(() => initEntry(certifications, createCertificationEntry));
-  const [localLang,  setLocalLang] = useState(() => initEntry(languages,      createLanguageEntry));
+  const [localCert,  setLocalCert] = useState(() => initEntry(certifications, createCertificationItem));
+  const [localLang,  setLocalLang] = useState(() => initEntry(languages,      createLanguageItem));
 
   const title = isNew
     ? `Nueva ${meta?.label ?? categoryId}`
@@ -102,8 +100,8 @@ export function SectionModal({
 
   const handleSave = () => {
     switch (categoryId) {
-      case 'profile':
-        onProfileChange(localProfile);
+      case 'basics':
+        onBasicsChange(localBasics);
         break;
       case 'experience':
         onExperienceChange(
@@ -118,11 +116,11 @@ export function SectionModal({
         );
         break;
       case 'skills':
-        onSkillsChange({
-          categories: isNew
-            ? [...skills.categories, localSkill]
-            : skills.categories.map(c => c.id === targetItemId ? localSkill : c),
-        });
+        onSkillsChange(
+          isNew
+            ? [...skills, localSkill]
+            : skills.map(s => s.id === targetItemId ? localSkill : s)
+        );
         break;
       case 'certifications':
         onCertificationsChange(
@@ -142,22 +140,19 @@ export function SectionModal({
 
   const renderContent = () => {
     switch (categoryId) {
-      case 'profile':
-        return <ProfileSection data={localProfile} onChange={setLocalProfile} />;
+      case 'basics':
+        return <ProfileSection data={localBasics} onChange={setLocalBasics} />;
       case 'experience':
         return <SingleExperience entry={localExp} onChange={setLocalExp} />;
       case 'education':
         return <SingleEducation entry={localEdu} onChange={setLocalEdu} />;
-      case 'skills': {
-        // Skills modal shows full SkillsSection but with just the one category being edited
-        const wrapped: SkillsData = { categories: [localSkill] };
+      case 'skills':
         return (
           <SkillsSection
-            data={wrapped}
-            onChange={(s) => setLocalSkill(s.categories[0])}
+            data={[localSkill]}
+            onChange={([updated]) => setLocalSkill(updated)}
           />
         );
-      }
       case 'certifications':
         return <SingleCertification entry={localCert} onChange={setLocalCert} />;
       case 'languages':
@@ -176,7 +171,6 @@ export function SectionModal({
         className="relative flex flex-col w-full max-w-xl max-h-[88vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-base font-semibold text-slate-800">{title}</h2>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
@@ -184,12 +178,10 @@ export function SectionModal({
           </Button>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {renderContent()}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave}>

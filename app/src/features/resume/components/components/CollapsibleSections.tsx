@@ -7,30 +7,33 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Resume, ExperienceEntry, EducationEntry, SkillsData, CertificationEntry, LanguageEntry } from '@/shared/types/resume';
+import type {
+  Basics,
+  ExperienceItem,
+  EducationItem,
+  SkillItem,
+  CertificationItem,
+  LanguageItem,
+} from '@resumate/schema';
 import { SectionModal } from './SectionModal';
 import { cn } from '@/lib/utils';
 
-// ── Section metadata ──────────────────────────────────────────────────────────
-
 export const SECTION_META: Record<string, { label: string; emoji: string }> = {
-  profile:        { label: 'Perfil',          emoji: '👤' },
-  experience:     { label: 'Experiencia',     emoji: '💼' },
+  basics:        { label: 'Perfil',          emoji: '👤' },
+  experience:    { label: 'Experiencia',     emoji: '💼' },
   education:      { label: 'Educación',       emoji: '🎓' },
-  skills:         { label: 'Habilidades',     emoji: '🛠️' },
+  skills:        { label: 'Habilidades',     emoji: '🛠️' },
   certifications: { label: 'Certificaciones', emoji: '📜' },
   languages:      { label: 'Idiomas',         emoji: '🌐' },
 };
 
-// ── Sub-item helpers (returns display text for each entry) ────────────────────
-
 function getSubItems(
   categoryId: string,
-  experience: ExperienceEntry[],
-  education: EducationEntry[],
-  skills: SkillsData,
-  certifications: CertificationEntry[],
-  languages: LanguageEntry[],
+  experience: ExperienceItem[],
+  education: EducationItem[],
+  skills: SkillItem[],
+  certifications: CertificationItem[],
+  languages: LanguageItem[],
 ): { id: string; primary: string; secondary?: string }[] {
   switch (categoryId) {
     case 'experience':
@@ -42,33 +45,31 @@ function getSubItems(
     case 'education':
       return education.map(e => ({
         id: e.id,
-        primary: e.institution || 'Sin institución',
+        primary: e.school || 'Sin institución',
         secondary: e.degree || undefined,
       }));
     case 'skills':
-      return skills.categories.map(c => ({
-        id: c.id,
-        primary: c.name || 'Sin nombre',
-        secondary: c.items.length ? `${c.items.length} habilidades` : undefined,
+      return skills.map(s => ({
+        id: s.id,
+        primary: s.name || 'Sin nombre',
+        secondary: s.keywords?.length ? `${s.keywords.length} habilidades` : undefined,
       }));
     case 'certifications':
       return certifications.map(c => ({
         id: c.id,
-        primary: c.name || 'Sin nombre',
+        primary: c.title || 'Sin nombre',
         secondary: c.issuer || undefined,
       }));
     case 'languages':
       return languages.map(l => ({
         id: l.id,
         primary: l.language || 'Sin idioma',
-        secondary: l.proficiency,
+        secondary: l.fluency,
       }));
     default:
       return [];
   }
 }
-
-// ── Sortable sub-item row ─────────────────────────────────────────────────────
 
 interface SubItemRowProps {
   id: string;
@@ -90,7 +91,6 @@ function SubItemRow({ id, primary, secondary, onClick }: SubItemRowProps) {
       )}
       onClick={onClick}
     >
-      {/* Drag grip */}
       <button
         type="button"
         className="cursor-grab text-slate-200 hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity touch-none shrink-0"
@@ -107,8 +107,6 @@ function SubItemRow({ id, primary, secondary, onClick }: SubItemRowProps) {
     </div>
   );
 }
-
-// ── Section group (header + expanded sub-items) ───────────────────────────────
 
 interface SectionGroupProps {
   categoryId: string;
@@ -137,7 +135,6 @@ function SectionGroup({
 
   return (
     <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
-      {/* Section header */}
       <button
         type="button"
         className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition-colors"
@@ -155,7 +152,6 @@ function SectionGroup({
           : <ChevronRight size={13} className="text-slate-300 shrink-0" />}
       </button>
 
-      {/* Expanded content */}
       {isExpanded && (
         <div className="border-t border-slate-100">
           {subItems.length > 0 ? (
@@ -176,8 +172,7 @@ function SectionGroup({
             <p className="pl-8 pr-3 py-2 text-[11px] text-slate-400 italic">Sin entradas</p>
           )}
 
-          {/* Add entry button (not shown for profile) */}
-          {categoryId !== 'profile' && (
+          {categoryId !== 'basics' && (
             <div className="px-3 py-2 border-t border-slate-100">
               <button
                 type="button"
@@ -194,39 +189,36 @@ function SectionGroup({
   );
 }
 
-// ── Main CollapsibleSections ──────────────────────────────────────────────────
-
 interface CollapsibleSectionsProps {
-  profile: Resume['profile'];
-  experience: ExperienceEntry[];
-  education: EducationEntry[];
-  skills: SkillsData;
-  certifications: CertificationEntry[];
-  languages: LanguageEntry[];
+  basics: Basics;
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  skills: SkillItem[];
+  certifications: CertificationItem[];
+  languages: LanguageItem[];
   enabledCategories: string[];
-  onProfileChange:        (p: Resume['profile']) => void;
-  onExperienceChange:     (e: ExperienceEntry[]) => void;
-  onEducationChange:      (e: EducationEntry[]) => void;
-  onSkillsChange:         (s: SkillsData) => void;
-  onCertificationsChange: (c: CertificationEntry[]) => void;
-  onLanguagesChange:      (l: LanguageEntry[]) => void;
+  onBasicsChange:         (b: Basics) => void;
+  onExperienceChange:     (e: ExperienceItem[]) => void;
+  onEducationChange:      (e: EducationItem[]) => void;
+  onSkillsChange:         (s: SkillItem[]) => void;
+  onCertificationsChange: (c: CertificationItem[]) => void;
+  onLanguagesChange:      (l: LanguageItem[]) => void;
   onAddSection: () => void;
 }
 
-// Modal target — which section + which item (or null = add new)
 interface ModalTarget {
   categoryId: string;
-  itemId: string | null; // null = new entry
+  itemId: string | null;
 }
 
 export function CollapsibleSections({
-  profile, experience, education, skills, certifications, languages,
+  basics, experience, education, skills, certifications, languages,
   enabledCategories,
-  onProfileChange, onExperienceChange, onEducationChange,
+  onBasicsChange, onExperienceChange, onEducationChange,
   onSkillsChange, onCertificationsChange, onLanguagesChange,
   onAddSection,
 }: CollapsibleSectionsProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['profile']));
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['basics']));
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null);
 
   const toggleSection = (id: string) => {
@@ -237,7 +229,6 @@ export function CollapsibleSections({
     });
   };
 
-  // Reorder sub-items within a section
   const handleReorderItems = (categoryId: string, newIds: string[]) => {
     switch (categoryId) {
       case 'experience': {
@@ -251,8 +242,8 @@ export function CollapsibleSections({
         break;
       }
       case 'skills': {
-        const map = Object.fromEntries(skills.categories.map(c => [c.id, c]));
-        onSkillsChange({ categories: newIds.map(id => map[id]).filter(Boolean) });
+        const map = Object.fromEntries(skills.map(s => [s.id, s]));
+        onSkillsChange(newIds.map(id => map[id]).filter(Boolean));
         break;
       }
       case 'certifications': {
@@ -269,15 +260,15 @@ export function CollapsibleSections({
   };
 
   const dataProps = {
-    profile, experience, education, skills, certifications, languages,
-    onProfileChange, onExperienceChange, onEducationChange,
+    basics, experience, education, skills, certifications, languages,
+    onBasicsChange, onExperienceChange, onEducationChange,
     onSkillsChange, onCertificationsChange, onLanguagesChange,
   };
 
   return (
     <div className="flex flex-col gap-1.5 p-3">
       {enabledCategories.map(catId => {
-        const subItems = catId === 'profile'
+        const subItems = catId === 'basics'
           ? []
           : getSubItems(catId, experience, education, skills, certifications, languages);
 
@@ -294,9 +285,6 @@ export function CollapsibleSections({
           />
         );
       })}
-
-      {/* Profile: clicking header opens modal directly */}
-      {/* (handled in SectionGroup — profile has no sub-items, so click header = open modal) */}
 
       <button
         onClick={onAddSection}

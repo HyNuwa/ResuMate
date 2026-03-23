@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import type { ExperienceEntry } from '@/shared/types/resume';
-import { createExperienceEntry } from '@/shared/types/resume';
+import type { ExperienceItem } from '@resumate/schema';
+import { createExperienceItem } from '@resumate/schema';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
-import { MonthYearPicker } from '@/components/common/MonthYearPicker';
 import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface ExperienceSectionProps {
-  entries: ExperienceEntry[];
-  onChange: (entries: ExperienceEntry[]) => void;
+  entries: ExperienceItem[];
+  onChange: (entries: ExperienceItem[]) => void;
 }
 
 export function ExperienceSection({ entries, onChange }: ExperienceSectionProps) {
@@ -25,7 +24,7 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
   };
 
   const handleAdd = () => {
-    const newEntry = createExperienceEntry();
+    const newEntry = createExperienceItem();
     onChange([...entries, newEntry]);
     setExpandedIds(prev => new Set([...prev, newEntry.id]));
   };
@@ -35,7 +34,7 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
     setExpandedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
   };
 
-  const handleChange = (id: string, field: keyof ExperienceEntry, value: string) => {
+  const handleChange = (id: string, field: keyof ExperienceItem, value: string) => {
     onChange(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
   };
 
@@ -80,13 +79,9 @@ export function ExperienceSection({ entries, onChange }: ExperienceSectionProps)
                     <Label>Location</Label>
                     <Input value={entry.location} onChange={(e) => handleChange(entry.id, 'location', e.target.value)} placeholder="San Francisco, CA" />
                   </div>
-                  <div className="form-field">
-                    <Label>Start Date</Label>
-                    <MonthYearPicker value={entry.startDate} onChange={(v) => handleChange(entry.id, 'startDate', v)} />
-                  </div>
-                  <div className="form-field">
-                    <Label>End Date</Label>
-                    <MonthYearPicker value={entry.endDate} onChange={(v) => handleChange(entry.id, 'endDate', v)} allowPresent presentLabel="Present" />
+                  <div className="form-field full-width">
+                    <Label>Period (e.g. Jan 2020 - Present)</Label>
+                    <Input value={entry.period} onChange={(e) => handleChange(entry.id, 'period', e.target.value)} placeholder="Jan 2020 - Present" />
                   </div>
                 </div>
                 <div className="form-field full-width mt-3">

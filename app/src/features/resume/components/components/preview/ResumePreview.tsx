@@ -1,21 +1,15 @@
 import { memo } from 'react';
 import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
-import type { Resume } from '@/shared/types/resume';
+import type { ResumeData } from '@resumate/schema';
 import type { TemplateId } from '@/templates';
 
 interface ResumePreviewProps {
-  resume: Resume;
-  enabledCategories: string[];
+  resume: ResumeData;
 }
 
-// ── Per-template style maps ────────────────────────────────────────────────
-// Typography/color values are intentionally left to CSS vars set by the parent
-// wrapper (FormBasedEditor injects --preview-* vars on the A4 paper div).
-// Anything fixed per template (layout, alignment, spacing) stays hardcoded.
-
 const TEMPLATE_STYLES: Record<TemplateId, {
-  doc: string;          // wrapper: layout + spacing (NO font/color — those come from vars)
+  doc: string;
   name: string;
   contact: string;
   sectionHeading: string;
@@ -56,12 +50,10 @@ const TEMPLATE_STYLES: Record<TemplateId, {
   },
 };
 
-// ── Markdown renderer — markdown-it (CommonMark) + DOMPurify (XSS-safe) ──────
-// Singleton: initialised once at module level, not per-render.
 const md = new MarkdownIt({
-  html:    false,  // never pass raw HTML through — prevents injection
-  breaks:  true,   // \n → <br> (matches previous behaviour)
-  linkify: true,   // auto-link URLs
+  html:    false,
+  breaks:  true,
+  linkify: true,
 });
 
 function renderMarkdown(text: string): string {
@@ -69,58 +61,53 @@ function renderMarkdown(text: string): string {
   return DOMPurify.sanitize(rawHtml);
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
+export const ResumePreview = memo(function ResumePreview({ resume }: ResumePreviewProps) {
+  const templateId = (resume.metadata.template ?? 'harvard') as TemplateId;
+  const ts         = TEMPLATE_STYLES[templateId] ?? TEMPLATE_STYLES['harvard'];
 
-export const ResumePreview = memo(function ResumePreview({ resume, enabledCategories }: ResumePreviewProps) {
-  const templateId = (resume.metadata.template ?? 'jake-ryan') as TemplateId;
-  const isCompact  = resume.metadata.layoutVariant === 'compact';
-  const ts         = TEMPLATE_STYLES[templateId] ?? TEMPLATE_STYLES['jake-ryan'];
-
-  // Body text classes — driven by CSS vars from parent
   const bodyText  = 'text-[length:var(--preview-size-body)] font-[family-name:var(--preview-font-body)] font-[var(--preview-weight-body)] text-[color:var(--preview-color-text)]';
-  const entryGap  = isCompact ? 'mb-px' : 'mb-2';
-  const sectionClass = isCompact
-    ? ts.sectionHeading.replace('mt-3', 'mt-1.5').replace('mt-4', 'mt-2')
-    : ts.sectionHeading;
-  const descClass = isCompact ? 'text-[10px] mt-0' : 'text-[12px] mt-0.5';
+  const entryGap  = 'mb-2';
+  const sectionClass = ts.sectionHeading;
+  const descClass = 'text-[12px] mt-0.5';
+
+  const experience = resume.sections.experience;
+  const education = resume.sections.education;
+  const skills = resume.sections.skills;
+  const certifications = resume.sections.certifications;
+  const languages = resume.sections.languages;
 
   return (
     <div className={`${ts.doc} ${bodyText}`}>
 
-      {/* Name */}
-      {resume.profile.fullName && (
+      {resume.basics.name && (
         <div className="mb-1">
-          <span className={ts.name}>{resume.profile.fullName.toUpperCase()}</span>
+          <span className={ts.name}>{resume.basics.name.toUpperCase()}</span>
         </div>
       )}
 
-      {/* Contact */}
-      {(resume.profile.email || resume.profile.phone || resume.profile.location || resume.profile.linkedin) && (
+      {(resume.basics.email || resume.basics.phone || resume.basics.location) && (
         <div className={ts.contact}>
-          {resume.profile.email    && <span>{resume.profile.email}</span>}
-          {resume.profile.phone    && <span>{resume.profile.phone}</span>}
-          {resume.profile.location && <span>{resume.profile.location}</span>}
-          {resume.profile.linkedin && <span>{resume.profile.linkedin}</span>}
+          {resume.basics.email    && <span>{resume.basics.email}</span>}
+          {resume.basics.phone    && <span>{resume.basics.phone}</span>}
+          {resume.basics.location && <span>{resume.basics.location}</span>}
         </div>
       )}
 
-      {/* Summary */}
-      {resume.profile.summary && (
+      {resume.summary.content && (
         <div
           className="mb-2 text-[length:var(--preview-size-body)]"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(resume.profile.summary) }}
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(resume.summary.content) }}
         />
       )}
 
-      {/* Experience */}
-      {enabledCategories.includes('experience') && resume.experience.length > 0 && (
+      {!experience.hidden && experience.items.length > 0 && (
         <div>
           <h2 className={sectionClass}>Experience</h2>
-          {resume.experience.map(exp => (
+          {experience.items.map((exp) => (
             <div key={exp.id} className={entryGap}>
               <div className={ts.entryRow}>
                 <strong>{exp.position} — {exp.company}{exp.location ? ` — ${exp.location}` : ''}</strong>
-                <span className={ts.entryDates}>{exp.startDate} - {exp.endDate}</span>
+                <span className={ts.entryDates}>{exp.period}</span>
               </div>
               {exp.description && (
                 <div className={descClass} dangerouslySetInnerHTML={{ __html: renderMarkdown(exp.description) }} />
@@ -130,64 +117,60 @@ export const ResumePreview = memo(function ResumePreview({ resume, enabledCatego
         </div>
       )}
 
-      {/* Education */}
-      {enabledCategories.includes('education') && resume.education.length > 0 && (
+      {!education.hidden && education.items.length > 0 && (
         <div>
           <h2 className={sectionClass}>Education</h2>
-          {resume.education.map(edu => (
+          {education.items.map((edu) => (
             <div key={edu.id} className={entryGap}>
               <div className={ts.entryRow}>
-                <strong>{edu.institution}{edu.location ? ` — ${edu.location}` : ''}</strong>
-                <span className={ts.entryDates}>{edu.graduationDate}</span>
+                <strong>{edu.school}{edu.location ? ` — ${edu.location}` : ''}</strong>
+                <span className={ts.entryDates}>{edu.period}</span>
               </div>
               <div className="text-[12px] italic">{edu.degree}</div>
-              {edu.gpa && <div className="text-[11px] text-gray-500">GPA: {edu.gpa}</div>}
-              {edu.achievements && (
-                <div className={descClass} dangerouslySetInnerHTML={{ __html: renderMarkdown(edu.achievements) }} />
+              {edu.grade && <div className="text-[11px] text-gray-500">Grade: {edu.grade}</div>}
+              {edu.description && (
+                <div className={descClass} dangerouslySetInnerHTML={{ __html: renderMarkdown(edu.description) }} />
               )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Skills */}
-      {enabledCategories.includes('skills') && resume.skills.categories.length > 0 && (
+      {!skills.hidden && skills.items.length > 0 && (
         <div>
           <h2 className={sectionClass}>Skills</h2>
-          {resume.skills.categories.map(cat =>
-            cat.items.length > 0 && (
-              <div key={cat.id} className="text-[length:var(--preview-size-body)]">
-                <strong>{cat.name}:</strong> {cat.items.join(', ')}
+          {skills.items.map((item) =>
+            item.name && (
+              <div key={item.id} className="text-[length:var(--preview-size-body)]">
+                <strong>{item.name}:</strong> {item.keywords?.join(', ')}
               </div>
             )
           )}
         </div>
       )}
 
-      {/* Certifications */}
-      {enabledCategories.includes('certifications') && resume.certifications?.length > 0 && (
+      {!certifications.hidden && certifications.items.length > 0 && (
         <div>
           <h2 className={sectionClass}>Certifications</h2>
-          {resume.certifications.map(cert => (
+          {certifications.items.map((cert) => (
             <div key={cert.id} className="mb-1">
               <div className={ts.entryRow}>
-                <strong>{cert.name} — {cert.issuer}</strong>
-                <span className={ts.entryDates}>{cert.issueDate}{cert.expirationDate && ` - ${cert.expirationDate}`}</span>
+                <strong>{cert.title} — {cert.issuer}</strong>
+                <span className={ts.entryDates}>{cert.date}</span>
               </div>
-              {cert.credentialId && <div className="text-[11px] text-gray-500">ID: {cert.credentialId}</div>}
+              {cert.description && <div className="text-[11px] text-gray-500">{cert.description}</div>}
             </div>
           ))}
         </div>
       )}
 
-      {/* Languages */}
-      {enabledCategories.includes('languages') && resume.languages?.length > 0 && (
+      {!languages.hidden && languages.items.length > 0 && (
         <div>
           <h2 className={sectionClass}>Languages</h2>
           <div className="flex flex-wrap gap-x-4">
-            {resume.languages.map(lang => (
+            {languages.items.map((lang) => (
               <div key={lang.id} className="text-[length:var(--preview-size-body)]">
-                <strong>{lang.language}:</strong> {lang.proficiency}
+                <strong>{lang.language}:</strong> {lang.fluency}
               </div>
             ))}
           </div>

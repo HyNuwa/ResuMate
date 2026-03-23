@@ -1,28 +1,19 @@
 import { Plus, X } from 'lucide-react';
-import type { LanguageEntry } from '@/shared/types/resume';
-import { createLanguageEntry } from '@/shared/types/resume';
+import type { LanguageItem } from '@resumate/schema';
+import { createLanguageItem } from '@resumate/schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface LanguagesSectionProps {
-  entries: LanguageEntry[];
-  onChange: (entries: LanguageEntry[]) => void;
+  entries: LanguageItem[];
+  onChange: (entries: LanguageItem[]) => void;
 }
 
-const proficiencyLevels: Array<LanguageEntry['proficiency']> = [
-  'Native', 'Fluent', 'Professional', 'Intermediate', 'Basic'
-];
-
-const proficiencyLabels: Record<LanguageEntry['proficiency'], string> = {
-  'Native': 'Nativo', 'Fluent': 'Fluido', 'Professional': 'Profesional',
-  'Intermediate': 'Intermedio', 'Basic': 'Básico'
-};
-
 export function LanguagesSection({ entries, onChange }: LanguagesSectionProps) {
-  const handleAdd = () => onChange([...entries, createLanguageEntry()]);
+  const handleAdd = () => onChange([...entries, createLanguageItem()]);
   const handleRemove = (id: string) => onChange(entries.filter(e => e.id !== id));
-  const handleUpdate = (id: string, field: keyof LanguageEntry, value: string) =>
+  const handleUpdate = (id: string, field: keyof LanguageItem, value: string) =>
     onChange(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
 
   return (
@@ -44,15 +35,11 @@ export function LanguagesSection({ entries, onChange }: LanguagesSectionProps) {
 
               <div className="form-field">
                 <Label>Nivel de Dominio</Label>
-                <select
-                  className="input"
-                  value={entry.proficiency}
-                  onChange={(e) => handleUpdate(entry.id, 'proficiency', e.target.value)}
-                >
-                  {proficiencyLevels.map(level => (
-                    <option key={level} value={level}>{proficiencyLabels[level]}</option>
-                  ))}
-                </select>
+                <Input
+                  value={entry.fluency}
+                  onChange={(e) => handleUpdate(entry.id, 'fluency', e.target.value)}
+                  placeholder="ej: Nativo, Fluido, Profesional"
+                />
               </div>
 
               <div className="form-field flex items-end">

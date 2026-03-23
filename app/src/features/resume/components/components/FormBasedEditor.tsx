@@ -1,8 +1,6 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import type { ResumeData } from '@resumate/schema';
-import { DEFAULT_TYPOGRAPHY, DEFAULT_DESIGN, DEFAULT_PAGE } from '@/shared/types/resume';
 import { CategorySelector } from './CategorySelector';
 import { EditorTopBar } from './EditorTopBar';
 import { PreviewToolbar } from './PreviewToolbar';
@@ -10,21 +8,21 @@ import { CollapsibleSections } from './CollapsibleSections';
 import { SettingsPanel } from './SettingsPanel';
 import { ResumePreview } from './preview/ResumePreview';
 import {
-  useCVStore,
-  selectResume, selectProfile, selectExperience, selectEducation,
-  selectSkills, selectCertifications, selectLanguages,
-  selectTitle, selectEnabledCategories, selectMetadata,
-  selectCanUndo, selectCanRedo,
-} from '../../stores/legacy/useCVStore';
+  useResumeStore,
+  selectResume,
+  selectBasics,
+  selectSections,
+  selectMetadata,
+  selectIsNewCV,
+} from '../../stores/useResumeStore';
+import { useEditorHistoryStore } from '../../stores/useHistoryStore';
 import { useFormAutoSave } from '@/shared/hooks/useFormAutoSave';
 import { useCreateCV, useUpdateCV } from '@/shared/hooks/useQueryCVs';
 import { logger } from '@/shared/utils/logger';
 
-// ── Drag-resize handle ────────────────────────────────────────────────────────
-
 interface ResizeHandleProps {
   onDrag: (dx: number) => void;
-  side: 'right' | 'left'; // which border the handle lives on
+  side: 'right' | 'left';
 }
 
 function ResizeHandle({ onDrag, side }: ResizeHandleProps) {
@@ -63,63 +61,72 @@ function ResizeHandle({ onDrag, side }: ResizeHandleProps) {
   );
 }
 
-// ── FormBasedEditor ───────────────────────────────────────────────────────────
-
 const MIN_PANEL = 200;
 const MAX_PANEL = 520;
 const DEFAULT_W = 260;
 
-export function FormBasedEditor() {
-  // ── Store ──────────────────────────────────────────────────────
-  const resume           = useCVStore(selectResume);
-  const profile          = useCVStore(selectProfile);
-  const experience       = useCVStore(selectExperience);
-  const education        = useCVStore(selectEducation);
-  const skills           = useCVStore(selectSkills);
-  const certifications   = useCVStore(selectCertifications);
-  const languages        = useCVStore(selectLanguages);
-  const title            = useCVStore(selectTitle);
-  const enabledCategories= useCVStore(selectEnabledCategories);
-  const metadata         = useCVStore(selectMetadata);
-  const canUndo          = useCVStore(selectCanUndo);
-  const canRedo          = useCVStore(selectCanRedo);
+const ALL_SECTION_KEYS = ['basics', 'experience', 'education', 'skills', 'certifications', 'languages', 'projects', 'interests', 'awards', 'publications', 'volunteer', 'references'] as const;
+
+export interface FormBasedEditorProps {
+  initialTemplate?: string;
+}
+
+export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) {
+  const resume           = useResumeStore(selectResume);
+  const basics          = useResumeStore(selectBasics);
+  const sections        = useResumeStore(selectSections);
+  const metadata        = useResumeStore(selectMetadata);
+  const isNewCV         = useResumeStore(selectIsNewCV);
 
   const {
-    setResume, updateProfile, updateExperience, updateEducation,
-    updateSkills, updateCertifications, updateLanguages,
-    updateTitle, updateTypography, updateDesign, updatePage,
-    addCategory, removeCategory, reorderCategories, undo, redo,
-  } = useCVStore();
+    updateBasics,
+    updateExperience,
+    updateEducation,
+    updateSkills,
+    updateLanguages,
+    updateCertifications,
+    updateTitle,
+    updateMetadata,
+    toggleSectionHidden,
+    reorderSections,
+  } = useResumeStore();
 
-  // ── Panel state ────────────────────────────────────────────────
+  const { undo, redo } = useEditorHistoryStore();
+  const canUndo = useEditorHistoryStore(s => s.index > 0);
+  const canRedo = useEditorHistoryStore(s => s.index < s.snapshots.length - 1);
+
+  useEffect(() => {
+    if (initialTemplate) {
+      updateMetadata({ template: initialTemplate });
+    }
+  }, []);
+
   const [leftOpen,   setLeftOpen]   = useState(true);
   const [rightOpen,  setRightOpen]  = useState(true);
   const [leftWidth,  setLeftWidth]  = useState(DEFAULT_W);
   const [rightWidth, setRightWidth] = useState(DEFAULT_W);
   const [showCategorySelector, setShowCategorySelector] = useState(false);
 
-  // ── Resize callbacks ───────────────────────────────────────────
   const resizeLeft  = useCallback((dx: number) =>
     setLeftWidth( w => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w + dx))), []);
   const resizeRight = useCallback((dx: number) =>
     setRightWidth(w => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w - dx))), []);
 
-  // ── Zoom ref ───────────────────────────────────────────────────
   const zoomRef = useRef<ReactZoomPanPinchRef>(null!);
 
-  // ── Auto-save ──────────────────────────────────────────────────
   const { mutateAsync: createCV } = useCreateCV();
   const { mutateAsync: updateCV } = useUpdateCV();
 
   const { handleChange, saveStatus } = useFormAutoSave({
     saveFn: async () => {
       try {
-        const resumeData = resume as unknown as ResumeData;
-        if (resume.metadata.id && resume.metadata.id !== 'new') {
-          await updateCV({ id: resume.metadata.id, data: resumeData });
+        if (!isNewCV && resume.metadata.notes) {
+          await updateCV({ id: resume.metadata.notes, data: resume });
         } else {
-          const saved = await createCV(resumeData);
-          if (saved?.id) setResume({ ...resume, metadata: { ...resume.metadata, id: saved.id } });
+          const saved = await createCV(resume);
+          if (saved?.id) {
+            updateMetadata({ notes: saved.id });
+          }
         }
       } catch (err) {
         logger.error('Auto-save failed:', err);
@@ -129,42 +136,39 @@ export function FormBasedEditor() {
     delay: 1500,
   });
 
+  const enabledCategories = ALL_SECTION_KEYS.filter(
+    key => !resume.sections[key as keyof typeof resume.sections]?.hidden
+  );
+
   const handleAddCategory = (categoryId: string) => {
-    handleChange(() => addCategory(categoryId));
+    handleChange(() => toggleSectionHidden(categoryId, false));
     setShowCategorySelector(false);
   };
 
-  // ── Settings values (with safe defaults) ──────────────────────
-  const typography = metadata.typography ?? DEFAULT_TYPOGRAPHY;
-  const design     = metadata.design     ?? DEFAULT_DESIGN;
-  const page       = metadata.page       ?? DEFAULT_PAGE;
+  const title = metadata.notes || 'Untitled CV';
 
-  // ── CSS vars driven by settings ────────────────────────────────
   const paperStyle: React.CSSProperties = {
     width:           '794px',
     minHeight:       '1123px',
-    backgroundColor: design.background,
+    backgroundColor: metadata.design.colors.background,
     boxShadow:       '0 4px 32px rgba(0,0,0,0.18)',
-    padding:         `${page.marginV}mm ${page.marginH}mm`,
-    // Typography CSS vars — consumed by ResumePreview via Tailwind arbitrary values
-    '--preview-font-body':      typography.body.fontFamily,
-    '--preview-weight-body':    typography.body.fontWeight,
-    '--preview-size-body':      `${typography.body.fontSize}px`,
-    '--preview-lh-body':        String(typography.body.lineHeight),
-    '--preview-font-heading':   typography.heading.fontFamily,
-    '--preview-weight-heading': typography.heading.fontWeight,
-    '--preview-size-heading':   `${typography.heading.fontSize}px`,
-    '--preview-lh-heading':     String(typography.heading.lineHeight),
-    // Color CSS vars
-    '--preview-color-primary':  design.primary,
-    '--preview-color-text':     design.text,
-    '--preview-color-bg':       design.background,
+    padding:         `${metadata.page.marginY}mm ${metadata.page.marginX}mm`,
+    '--preview-font-body':      metadata.typography.body.fontFamily,
+    '--preview-weight-body':    metadata.typography.body.fontWeights[0],
+    '--preview-size-body':      `${metadata.typography.body.fontSize}px`,
+    '--preview-lh-body':        String(metadata.typography.body.lineHeight),
+    '--preview-font-heading':   metadata.typography.heading.fontFamily,
+    '--preview-weight-heading': metadata.typography.heading.fontWeights[0],
+    '--preview-size-heading':   `${metadata.typography.heading.fontSize}px`,
+    '--preview-lh-heading':     String(metadata.typography.heading.lineHeight),
+    '--preview-color-primary':  metadata.design.colors.primary,
+    '--preview-color-text':     metadata.design.colors.text,
+    '--preview-color-bg':       metadata.design.colors.background,
   } as React.CSSProperties;
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-100">
 
-      {/* ── Top bar ── */}
       <EditorTopBar
         title={title}
         onTitleChange={(t) => handleChange(() => updateTitle(t))}
@@ -175,10 +179,8 @@ export function FormBasedEditor() {
         onToggleRight={() => setRightOpen(v => !v)}
       />
 
-      {/* ── Body (3-column with drag resize) ── */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Left panel */}
         {leftOpen && (
           <>
             <aside
@@ -190,14 +192,14 @@ export function FormBasedEditor() {
               </div>
               <div className="flex-1 overflow-y-auto">
                 <CollapsibleSections
-                  profile={profile}
-                  experience={experience}
-                  education={education}
-                  skills={skills}
-                  certifications={certifications}
-                  languages={languages}
+                  basics={basics}
+                  experience={sections.experience.items}
+                  education={sections.education.items}
+                  skills={sections.skills.items}
+                  certifications={sections.certifications.items}
+                  languages={sections.languages.items}
                   enabledCategories={enabledCategories}
-                  onProfileChange={(p) => handleChange(() => updateProfile(p))}
+                  onBasicsChange={(b) => handleChange(() => updateBasics(b))}
                   onExperienceChange={(e) => handleChange(() => updateExperience(e))}
                   onEducationChange={(e) => handleChange(() => updateEducation(e))}
                   onSkillsChange={(s) => handleChange(() => updateSkills(s))}
@@ -211,7 +213,6 @@ export function FormBasedEditor() {
           </>
         )}
 
-        {/* Center — preview */}
         <div className="flex flex-col flex-1 overflow-hidden">
           <PreviewToolbar
             canUndo={canUndo}
@@ -236,14 +237,13 @@ export function FormBasedEditor() {
                 contentStyle={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px' }}
               >
                 <div style={paperStyle}>
-                  <ResumePreview resume={resume} enabledCategories={enabledCategories} />
+                  <ResumePreview resume={resume} />
                 </div>
               </TransformComponent>
             </TransformWrapper>
           </div>
         </div>
 
-        {/* Right panel */}
         {rightOpen && (
           <>
             <ResizeHandle onDrag={resizeRight} side="left" />
@@ -254,11 +254,11 @@ export function FormBasedEditor() {
               <SettingsPanel
                 metadata={metadata}
                 enabledCategories={enabledCategories}
-                onUpdateTypography={(t) => handleChange(() => updateTypography(t))}
-                onUpdateDesign={(d) => handleChange(() => updateDesign(d))}
-                onUpdatePage={(p) => handleChange(() => updatePage(p))}
-                onReorderCategories={(order) => handleChange(() => reorderCategories(order))}
-                onRemoveCategory={(id) => handleChange(() => removeCategory(id))}
+                onUpdateTypography={(t) => handleChange(() => updateMetadata({ typography: t }))}
+                onUpdateDesign={(d) => handleChange(() => updateMetadata({ design: d }))}
+                onUpdatePage={(p) => handleChange(() => updateMetadata({ page: p }))}
+                onReorderCategories={(order) => handleChange(() => reorderSections(order))}
+                onRemoveCategory={(id) => handleChange(() => toggleSectionHidden(id, true))}
                 onAddSection={() => setShowCategorySelector(true)}
               />
             </aside>
@@ -266,7 +266,6 @@ export function FormBasedEditor() {
         )}
       </div>
 
-      {/* Category selector modal */}
       {showCategorySelector && (
         <CategorySelector
           enabledCategories={enabledCategories}

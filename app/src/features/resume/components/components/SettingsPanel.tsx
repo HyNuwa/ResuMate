@@ -10,10 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import type { CVMetadata, TypographySettings, DesignSettings, PageSettings, PageFormat } from '@/shared/types/resume';
-import {
-  DEFAULT_TYPOGRAPHY, DEFAULT_DESIGN, DEFAULT_PAGE,
-} from '@/shared/types/resume';
+import type {
+  Metadata,
+  TypographySettings,
+  DesignSettings,
+  PageSettings,
+  PageFormat,
+  FontWeight,
+} from '@resumate/schema';
 import { SECTION_META } from './CollapsibleSections';
 import { CV_TEMPLATES } from '@/templates';
 
@@ -109,7 +113,7 @@ const FONT_WEIGHTS = ['300', '400', '500', '600', '700'];
 // ── Main SettingsPanel ────────────────────────────────────────────────────────
 
 interface SettingsPanelProps {
-  metadata: CVMetadata;
+  metadata: Metadata;
   enabledCategories: string[];
   onUpdateTypography: (t: TypographySettings) => void;
   onUpdateDesign:     (d: DesignSettings) => void;
@@ -124,9 +128,9 @@ export function SettingsPanel({
   onUpdateTypography, onUpdateDesign, onUpdatePage,
   onReorderCategories, onRemoveCategory, onAddSection,
 }: SettingsPanelProps) {
-  const typography = metadata.typography ?? DEFAULT_TYPOGRAPHY;
-  const design     = metadata.design     ?? DEFAULT_DESIGN;
-  const page       = metadata.page       ?? DEFAULT_PAGE;
+  const typography = metadata.typography;
+  const design     = metadata.design;
+  const page       = metadata.page;
 
   // Find current template info
   const template = CV_TEMPLATES.find((t) => t.id === metadata.template);
@@ -141,11 +145,21 @@ export function SettingsPanel({
     onReorderCategories(arrayMove(enabledCategories, oldIdx, newIdx));
   };
 
-  // Typography helper
-  const setBodyProp   = <K extends keyof typeof typography.body>(k: K, v: typeof typography.body[K]) =>
-    onUpdateTypography({ ...typography, body: { ...typography.body, [k]: v } });
-  const setHeadingProp = <K extends keyof typeof typography.heading>(k: K, v: typeof typography.heading[K]) =>
-    onUpdateTypography({ ...typography, heading: { ...typography.heading, [k]: v } });
+  // Typography helper - fontWeights is array in new schema
+  const setBodyProp   = <K extends keyof typeof typography.body>(k: K, v: typeof typography.body[K]) => {
+    if (k === 'fontWeights') {
+      onUpdateTypography({ ...typography, body: { ...typography.body, [k]: v as string[] } });
+    } else {
+      onUpdateTypography({ ...typography, body: { ...typography.body, [k]: v } });
+    }
+  };
+  const setHeadingProp = <K extends keyof typeof typography.heading>(k: K, v: typeof typography.heading[K]) => {
+    if (k === 'fontWeights') {
+      onUpdateTypography({ ...typography, heading: { ...typography.heading, [k]: v as string[] } });
+    } else {
+      onUpdateTypography({ ...typography, heading: { ...typography.heading, [k]: v } });
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-white border-l border-slate-200 text-sm">
@@ -196,8 +210,8 @@ export function SettingsPanel({
       </SettingRow>
       <SettingRow label="Font Weight">
         <select
-          value={typography.body.fontWeight}
-          onChange={(e) => setBodyProp('fontWeight', e.target.value)}
+          value={typography.body.fontWeights[0]}
+          onChange={(e) => setBodyProp('fontWeights', [e.target.value as FontWeight])}
           className="w-full text-xs border border-slate-200 rounded px-2 py-1 bg-white"
         >
           {FONT_WEIGHTS.map((w) => <option key={w} value={w}>{w}</option>)}
@@ -224,8 +238,8 @@ export function SettingsPanel({
         </select>
       </SettingRow>
       <SettingRow label="Font Weight">
-        <select value={typography.heading.fontWeight}
-          onChange={(e) => setHeadingProp('fontWeight', e.target.value)}
+        <select value={typography.heading.fontWeights[0]}
+          onChange={(e) => setHeadingProp('fontWeights', [e.target.value as FontWeight])}
           className="w-full text-xs border border-slate-200 rounded px-2 py-1 bg-white">
           {FONT_WEIGHTS.map((w) => <option key={w} value={w}>{w}</option>)}
         </select>
@@ -243,18 +257,18 @@ export function SettingsPanel({
 
       {/* ── Design ── */}
       <SectionHeading>Diseño</SectionHeading>
-      <ColorInput label="Color primario" value={design.primary}
-        onChange={(v) => onUpdateDesign({ ...design, primary: v })} />
-      <ColorInput label="Color de texto" value={design.text}
-        onChange={(v) => onUpdateDesign({ ...design, text: v })} />
-      <ColorInput label="Fondo" value={design.background}
-        onChange={(v) => onUpdateDesign({ ...design, background: v })} />
+      <ColorInput label="Color primario" value={design.colors.primary}
+        onChange={(v) => onUpdateDesign({ ...design, colors: { ...design.colors, primary: v } })} />
+      <ColorInput label="Color de texto" value={design.colors.text}
+        onChange={(v) => onUpdateDesign({ ...design, colors: { ...design.colors, text: v } })} />
+      <ColorInput label="Fondo" value={design.colors.background}
+        onChange={(v) => onUpdateDesign({ ...design, colors: { ...design.colors, background: v } })} />
 
       {/* ── Página ── */}
       <SectionHeading>Página</SectionHeading>
       <SettingRow label="Idioma">
-        <select value={page.language}
-          onChange={(e) => onUpdatePage({ ...page, language: e.target.value })}
+        <select value={page.locale}
+          onChange={(e) => onUpdatePage({ ...page, locale: e.target.value })}
           className="w-full text-xs border border-slate-200 rounded px-2 py-1 bg-white">
           <option value="es">Español</option>
           <option value="en">English</option>
@@ -265,7 +279,7 @@ export function SettingsPanel({
       </SettingRow>
       <SettingRow label="Formato">
         <div className="flex gap-1">
-          {(['A4', 'Letter', 'Custom'] as PageFormat[]).map((f) => (
+          {(['a4', 'letter', 'free-form'] as PageFormat[]).map((f) => (
             <button key={f} type="button"
               onClick={() => onUpdatePage({ ...page, format: f })}
               className={cn(
@@ -274,29 +288,29 @@ export function SettingsPanel({
                   ? 'bg-blue-600 border-blue-600 text-white'
                   : 'border-slate-200 text-slate-600 hover:border-blue-300'
               )}>
-              {f}
+                {f.toUpperCase()}
             </button>
           ))}
         </div>
       </SettingRow>
-      <SettingRow label="Margen H (mm)">
-        <Input type="number" value={page.marginH} min={0} max={50}
-          onChange={(e) => onUpdatePage({ ...page, marginH: Number(e.target.value) })}
+      <SettingRow label="Margen X (mm)">
+        <Input type="number" value={page.marginX} min={0} max={50}
+          onChange={(e) => onUpdatePage({ ...page, marginX: Number(e.target.value) })}
           className="h-7 text-xs" />
       </SettingRow>
-      <SettingRow label="Margen V (mm)">
-        <Input type="number" value={page.marginV} min={0} max={50}
-          onChange={(e) => onUpdatePage({ ...page, marginV: Number(e.target.value) })}
+      <SettingRow label="Margen Y (mm)">
+        <Input type="number" value={page.marginY} min={0} max={50}
+          onChange={(e) => onUpdatePage({ ...page, marginY: Number(e.target.value) })}
           className="h-7 text-xs" />
       </SettingRow>
-      <SettingRow label="Espaciado H (px)">
-        <Input type="number" value={page.spacingH} min={0} max={80}
-          onChange={(e) => onUpdatePage({ ...page, spacingH: Number(e.target.value) })}
+      <SettingRow label="Gap X (px)">
+        <Input type="number" value={page.gapX} min={0} max={80}
+          onChange={(e) => onUpdatePage({ ...page, gapX: Number(e.target.value) })}
           className="h-7 text-xs" />
       </SettingRow>
-      <SettingRow label="Espaciado V (px)">
-        <Input type="number" value={page.spacingV} min={0} max={80}
-          onChange={(e) => onUpdatePage({ ...page, spacingV: Number(e.target.value) })}
+      <SettingRow label="Gap Y (px)">
+        <Input type="number" value={page.gapY} min={0} max={80}
+          onChange={(e) => onUpdatePage({ ...page, gapY: Number(e.target.value) })}
           className="h-7 text-xs" />
       </SettingRow>
 

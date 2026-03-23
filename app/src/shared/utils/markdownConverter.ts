@@ -1,67 +1,61 @@
-import type { Resume } from '@/shared/types/resume';
-import { createCVMetadata } from '@/shared/types/resume';
+import type { ResumeData } from '@resumate/schema';
 
 /**
- * Convert Resume object to Markdown string
+ * Convert ResumeData object to Markdown string
  */
-export function resumeToMarkdown(resume: Resume): string {
+export function resumeToMarkdown(resume: ResumeData): string {
   let markdown = '';
 
-  // Profile section
-  markdown += `# ${resume.profile.fullName}\n\n`;
-  
+  markdown += `# ${resume.basics.name}\n\n`;
+
   const contactInfo = [
-    resume.profile.email && `**Email:** ${resume.profile.email}`,
-    resume.profile.phone && `**Phone:** ${resume.profile.phone}`,
-    resume.profile.location && `**Location:** ${resume.profile.location}`,
-    resume.profile.linkedin && `**LinkedIn:** ${resume.profile.linkedin}`,
-    resume.profile.website && `**Website:** ${resume.profile.website}`,
+    resume.basics.email && `**Email:** ${resume.basics.email}`,
+    resume.basics.phone && `**Phone:** ${resume.basics.phone}`,
+    resume.basics.location && `**Location:** ${resume.basics.location}`,
+    resume.basics.website.url && `**Website:** ${resume.basics.website.url}`,
   ].filter(Boolean).join(' | ');
-  
+
   if (contactInfo) {
     markdown += `${contactInfo}\n\n`;
   }
 
-  if (resume.profile.summary) {
-    markdown += `${resume.profile.summary}\n\n`;
+  if (resume.summary.content) {
+    markdown += `${resume.summary.content}\n\n`;
   }
 
   markdown += '---\n\n';
 
-  // Experience section
-  if (resume.experience.length > 0) {
+  if (resume.sections.experience.items.length > 0) {
     markdown += '## Experience\n\n';
-    resume.experience.forEach(exp => {
+    resume.sections.experience.items.forEach(exp => {
       markdown += `**${exp.position}** — ${exp.company} — ${exp.location}  \n`;
-      markdown += `*${exp.startDate} - ${exp.endDate}*\n\n`;
+      markdown += `*${exp.period}*\n\n`;
       if (exp.description) {
         markdown += `${exp.description}\n\n`;
       }
     });
   }
 
-  // Education section
-  if (resume.education.length > 0) {
+  if (resume.sections.education.items.length > 0) {
     markdown += '## Education\n\n';
-    resume.education.forEach(edu => {
-      markdown += `**${edu.institution}** — ${edu.location}  \n`;
-      markdown += `*${edu.degree}* | ${edu.graduationDate}\n`;
-      if (edu.gpa) {
-        markdown += `- GPA: ${edu.gpa}\n`;
+    resume.sections.education.items.forEach(edu => {
+      markdown += `**${edu.school}** — ${edu.location}  \n`;
+      markdown += `*${edu.degree}* | ${edu.period}\n`;
+      if (edu.grade) {
+        markdown += `- Grade: ${edu.grade}\n`;
       }
-      if (edu.achievements) {
-        markdown += `${edu.achievements}\n`;
+      if (edu.description) {
+        markdown += `${edu.description}\n`;
       }
       markdown += '\n';
     });
   }
 
-  // Skills section
-  if (resume.skills.categories.length > 0) {
+  if (resume.sections.skills.items.length > 0) {
     markdown += '## Skills\n\n';
-    resume.skills.categories.forEach(category => {
-      if (category.items.length > 0) {
-        markdown += `**${category.name}:** ${category.items.join(', ')}  \n`;
+    resume.sections.skills.items.forEach(item => {
+      if (item.name) {
+        markdown += `**${item.name}:** ${item.keywords?.join(', ') || ''}  \n`;
       }
     });
   }
@@ -75,24 +69,15 @@ export function resumeToMarkdown(resume: Resume): string {
 export function htmlToMarkdown(html: string): string {
   let markdown = html;
 
-  // Convert <strong> and <b> to **bold**
   markdown = markdown.replace(/<(strong|b)>(.*?)<\/(strong|b)>/gi, '**$2**');
-
-  // Convert <em> and <i> to *italic*
   markdown = markdown.replace(/<(em|i)>(.*?)<\/(em|i)>/gi, '*$2*');
 
-  // Convert <ul><li> to markdown bullets
   markdown = markdown.replace(/<ul[^>]*>(.*?)<\/ul>/gis, (_, content) => {
     return content.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
   });
 
-  // Remove <br> and convert to newlines
   markdown = markdown.replace(/<br\s*\/?>/gi, '\n');
-
-  // Remove remaining HTML tags
   markdown = markdown.replace(/<[^>]+>/g, '');
-
-  // Clean up extra whitespace
   markdown = markdown.replace(/\n{3,}/g, '\n\n').trim();
 
   return markdown;
@@ -106,13 +91,9 @@ export function markdownToHtml(markdown: string): string {
 
   let html = markdown;
 
-  // Convert **bold** to <strong>
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-  // Convert *italic* to <em>
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
-  // Convert markdown bullets to <ul><li>
   const lines = html.split('\n');
   let inList = false;
   let result = '';
@@ -138,53 +119,4 @@ export function markdownToHtml(markdown: string): string {
   if (inList) result += '</ul>';
 
   return result;
-}
-
-/**
- * Parse markdown back to Resume object (basic implementation)
- * This is for loading existing CVs - can be enhanced later
- */
-export function markdownToResume(markdown: string): Resume {
-  // This is a basic parser - can be improved
-  // For now, return empty resume as we'll primarily work from form → markdown
-  const lines = markdown.split('\n');
-  
-  const resume: Resume = {
-    metadata: createCVMetadata('Imported CV'),
-    profile: {
-      fullName: '',
-      email: '',
-      phone: '',
-      location: '',
-      summary: '',
-    },
-    experience: [],
-    education: [],
-    skills: { categories: [] },
-    certifications: [],
-    languages: [],
-    enabledCategories: ['profile'], // Start with profile enabled by default
-  };
-
-  // Extract name from first # heading
-  const nameMatch = lines.find(line => line.startsWith('# '));
-  if (nameMatch) {
-    resume.profile.fullName = nameMatch.replace('# ', '').trim();
-  }
-
-  // Extract contact info
-  const contactLine = lines.find(line => line.includes('Email:') || line.includes('Phone:'));
-  if (contactLine) {
-    const emailMatch = contactLine.match(/Email:\s*([^\s|]+)/);
-    const phoneMatch = contactLine.match(/Phone:\s*([^\s|]+)/);
-    const locationMatch = contactLine.match(/Location:\s*([^\s|]+)/);
-    
-    if (emailMatch) resume.profile.email = emailMatch[1];
-    if (phoneMatch) resume.profile.phone = phoneMatch[1];
-    if (locationMatch) resume.profile.location = locationMatch[1];
-  }
-
-  // For now, return this basic structure
-  // Can enhance parsing later if needed
-  return resume;
 }

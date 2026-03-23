@@ -1,15 +1,15 @@
 import { Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import type { CertificationEntry } from '@/shared/types/resume';
-import { createCertificationEntry } from '@/shared/types/resume';
+import type { CertificationItem } from '@resumate/schema';
+import { createCertificationItem } from '@resumate/schema';
 import { MonthYearPicker } from '@/components/common/MonthYearPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface CertificationsSectionProps {
-  entries: CertificationEntry[];
-  onChange: (entries: CertificationEntry[]) => void;
+  entries: CertificationItem[];
+  onChange: (entries: CertificationItem[]) => void;
 }
 
 export function CertificationsSection({ entries, onChange }: CertificationsSectionProps) {
@@ -24,7 +24,7 @@ export function CertificationsSection({ entries, onChange }: CertificationsSecti
   };
 
   const handleAdd = () => {
-    const newEntry = createCertificationEntry();
+    const newEntry = createCertificationItem();
     onChange([...entries, newEntry]);
     setExpandedIds(prev => new Set([...prev, newEntry.id]));
   };
@@ -34,12 +34,12 @@ export function CertificationsSection({ entries, onChange }: CertificationsSecti
     setExpandedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
   };
 
-  const handleUpdate = (id: string, field: keyof CertificationEntry, value: string) =>
+  const handleUpdate = (id: string, field: keyof CertificationItem, value: string) =>
     onChange(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
 
-  const getEntryTitle = (entry: CertificationEntry) => {
-    if (entry.name && entry.issuer) return `${entry.name} - ${entry.issuer}`;
-    return entry.name || entry.issuer || 'Nueva Certificación';
+  const getEntryTitle = (entry: CertificationItem) => {
+    if (entry.title && entry.issuer) return `${entry.title} - ${entry.issuer}`;
+    return entry.title || entry.issuer || 'Nueva Certificación';
   };
 
   return (
@@ -70,7 +70,7 @@ export function CertificationsSection({ entries, onChange }: CertificationsSecti
                 <div className="form-grid">
                   <div className="form-field full-width">
                     <Label>Nombre de la Certificación</Label>
-                    <Input value={entry.name} onChange={(e) => handleUpdate(entry.id, 'name', e.target.value)} placeholder="ej: AWS Certified Solutions Architect" />
+                    <Input value={entry.title} onChange={(e) => handleUpdate(entry.id, 'title', e.target.value)} placeholder="ej: AWS Certified Solutions Architect" />
                   </div>
                   <div className="form-field full-width">
                     <Label>Organización Emisora</Label>
@@ -78,15 +78,11 @@ export function CertificationsSection({ entries, onChange }: CertificationsSecti
                   </div>
                   <div className="form-field">
                     <Label>Fecha de Emisión</Label>
-                    <MonthYearPicker value={entry.issueDate} onChange={(v) => handleUpdate(entry.id, 'issueDate', v)} />
-                  </div>
-                  <div className="form-field">
-                    <Label>Fecha de Vencimiento (Opcional)</Label>
-                    <MonthYearPicker value={entry.expirationDate || ''} onChange={(v) => handleUpdate(entry.id, 'expirationDate', v)} allowPresent presentLabel="No expiry" />
+                    <MonthYearPicker value={entry.date} onChange={(v) => handleUpdate(entry.id, 'date', v)} />
                   </div>
                   <div className="form-field full-width">
-                    <Label>ID de Credencial (Opcional)</Label>
-                    <Input value={entry.credentialId || ''} onChange={(e) => handleUpdate(entry.id, 'credentialId', e.target.value)} placeholder="ej: ABC123XYZ" />
+                    <Label>Descripción (opcional)</Label>
+                    <Input value={entry.description || ''} onChange={(e) => handleUpdate(entry.id, 'description', e.target.value)} placeholder="ID de credencial, fecha de vencimiento, etc." />
                   </div>
                 </div>
               </div>

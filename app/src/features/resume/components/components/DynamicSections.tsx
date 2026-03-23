@@ -14,15 +14,20 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Resume, ExperienceEntry, EducationEntry, SkillsData, CertificationEntry, LanguageEntry } from '@/shared/types/resume';
+import type {
+  Basics,
+  ExperienceItem,
+  EducationItem,
+  SkillItem,
+  CertificationItem,
+  LanguageItem,
+} from '@resumate/schema';
 import { ProfileSection } from '../sections/sections/ProfileSection';
 import { ExperienceSection } from '../sections/sections/ExperienceSection';
 import { EducationSection } from '../sections/sections/EducationSection';
 import { SkillsSection } from '../sections/sections/SkillsSection';
 import { CertificationsSection } from '../sections/sections/CertificationsSection';
 import { LanguagesSection } from '../sections/sections/LanguagesSection';
-
-// ---- Sortable wrapper for each draggable section ----
 
 interface SortableSectionProps {
   id: string;
@@ -48,7 +53,6 @@ function SortableSection({ id, onRemove, children }: SortableSectionProps) {
 
   return (
     <div ref={setNodeRef} style={style} className="section-wrapper">
-      {/* Drag handle */}
       <button
         className="drag-handle"
         {...attributes}
@@ -60,7 +64,6 @@ function SortableSection({ id, onRemove, children }: SortableSectionProps) {
         <GripVertical size={16} />
       </button>
 
-      {/* Remove button */}
       <button
         className="remove-category-btn"
         onClick={onRemove}
@@ -75,20 +78,18 @@ function SortableSection({ id, onRemove, children }: SortableSectionProps) {
   );
 }
 
-// ---- Section content renderer ----
-
 interface SectionContentProps {
   categoryId: string;
-  experience: ExperienceEntry[];
-  education: EducationEntry[];
-  skills: SkillsData;
-  certifications: CertificationEntry[];
-  languages: LanguageEntry[];
-  onExperienceChange: (experience: ExperienceEntry[]) => void;
-  onEducationChange: (education: EducationEntry[]) => void;
-  onSkillsChange: (skills: SkillsData) => void;
-  onCertificationsChange: (certifications: CertificationEntry[]) => void;
-  onLanguagesChange: (languages: LanguageEntry[]) => void;
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  skills: SkillItem[];
+  certifications: CertificationItem[];
+  languages: LanguageItem[];
+  onExperienceChange: (experience: ExperienceItem[]) => void;
+  onEducationChange: (education: EducationItem[]) => void;
+  onSkillsChange: (skills: SkillItem[]) => void;
+  onCertificationsChange: (certifications: CertificationItem[]) => void;
+  onLanguagesChange: (languages: LanguageItem[]) => void;
 }
 
 function SectionContent({
@@ -113,41 +114,38 @@ function SectionContent({
   }
 }
 
-// ---- Main component ----
-
 interface DynamicSectionsProps {
-  profile: Resume['profile'];
-  experience: ExperienceEntry[];
-  education: EducationEntry[];
-  skills: SkillsData;
-  certifications: CertificationEntry[];
-  languages: LanguageEntry[];
+  basics: Basics;
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  skills: SkillItem[];
+  certifications: CertificationItem[];
+  languages: LanguageItem[];
   enabledCategories: string[];
-  onProfileChange: (profile: Resume['profile']) => void;
-  onExperienceChange: (experience: ExperienceEntry[]) => void;
-  onEducationChange: (education: EducationEntry[]) => void;
-  onSkillsChange: (skills: SkillsData) => void;
-  onCertificationsChange: (certifications: CertificationEntry[]) => void;
-  onLanguagesChange: (languages: LanguageEntry[]) => void;
+  onBasicsChange: (basics: Basics) => void;
+  onExperienceChange: (experience: ExperienceItem[]) => void;
+  onEducationChange: (education: EducationItem[]) => void;
+  onSkillsChange: (skills: SkillItem[]) => void;
+  onCertificationsChange: (certifications: CertificationItem[]) => void;
+  onLanguagesChange: (languages: LanguageItem[]) => void;
   onRemoveCategory: (categoryId: string) => void;
   onReorderCategories: (newOrder: string[]) => void;
 }
 
 export function DynamicSections({
-  profile, experience, education, skills, certifications, languages,
+  basics, experience, education, skills, certifications, languages,
   enabledCategories,
-  onProfileChange, onExperienceChange, onEducationChange,
+  onBasicsChange, onExperienceChange, onEducationChange,
   onSkillsChange, onCertificationsChange, onLanguagesChange,
   onRemoveCategory, onReorderCategories,
 }: DynamicSectionsProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 }, // require 8px of movement to prevent accidental drags
+      activationConstraint: { distance: 8 },
     })
   );
 
-  // Only non-profile categories are draggable
-  const draggableIds = enabledCategories.filter(id => id !== 'profile');
+  const draggableIds = enabledCategories.filter(id => id !== 'basics');
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -165,10 +163,8 @@ export function DynamicSections({
 
   return (
     <>
-      {/* Profile — always pinned at top, not draggable */}
-      <ProfileSection data={profile} onChange={onProfileChange} />
+      <ProfileSection data={basics} onChange={onBasicsChange} />
 
-      {/* Draggable sections */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

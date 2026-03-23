@@ -1,7 +1,7 @@
 import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Download, FileJson } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import type { Resume } from '@/shared/types/resume';
+import type { ResumeData } from '@resumate/schema';
 import { cn } from '@/lib/utils';
 
 interface PreviewToolbarProps {
@@ -10,7 +10,7 @@ interface PreviewToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   zoomRef: React.RefObject<ReactZoomPanPinchRef>;
-  resume: Resume;
+  resume: ResumeData;
 }
 
 function ToolBtn({
@@ -45,7 +45,7 @@ export function PreviewToolbar({ canUndo, canRedo, onUndo, onRedo, zoomRef, resu
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `${resume.metadata.title || 'resume'}.json`;
+    a.download = `${resume.metadata.notes || 'resume'}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

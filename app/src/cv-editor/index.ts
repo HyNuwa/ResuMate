@@ -1,1 +1,1 @@
-export { useCVStore, selectResume, selectProfile, selectExperience, selectEducation, selectSkills, selectCertifications, selectLanguages, selectTitle, selectEnabledCategories } from '../features/resume/stores/legacy/useCVStore';
+export { useResumeStore, selectResume, selectBasics, selectSummary, selectSections, selectMetadata, selectIsNewCV, selectCustomSections } from '../features/resume/stores/useResumeStore';

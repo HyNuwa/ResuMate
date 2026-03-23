@@ -33,6 +33,8 @@ interface ResumeState {
   // Metadata
   updateTitle:          (title: string) => void;
   updateMetadata:       (patch: Partial<ResumeData['metadata']>) => void;
+  toggleSectionHidden:  (sectionKey: string, hidden: boolean) => void;
+  reorderSections:      (newOrder: string[]) => void;
 }
 
 function snapshot(resume: ResumeData): string {
@@ -146,7 +148,42 @@ export const useResumeStore = create<ResumeState>()((set) => ({
       useEditorHistoryStore.getState().push(snapshot(s.resume));
       return { resume: { ...s.resume, metadata: { ...s.resume.metadata, ...patch } } };
     }),
-}));
+
+  toggleSectionHidden: (sectionKey, hidden) =>
+    set((s) => {
+      const section = s.resume.sections[sectionKey as keyof typeof s.resume.sections];
+      if (!section) return s;
+      useEditorHistoryStore.getState().push(snapshot(s.resume));
+      return {
+        resume: {
+          ...s.resume,
+          sections: {
+            ...s.resume.sections,
+            [sectionKey]: { ...section, hidden },
+          },
+        },
+      };
+    }),
+
+  reorderSections: (newOrder) =>
+    set((s) => {
+      const pages = s.resume.metadata.layout.pages;
+      if (!pages.length) return s;
+      useEditorHistoryStore.getState().push(snapshot(s.resume));
+      return {
+        resume: {
+          ...s.resume,
+          metadata: {
+            ...s.resume.metadata,
+            layout: {
+              ...s.resume.metadata.layout,
+              pages: pages.map((p, i) => i === 0 ? { ...p, main: newOrder } : p),
+            },
+          },
+        },
+      };
+    }),
+}))
 
 // ── Selectors ────────────────────────────────────────────────────────────────
 

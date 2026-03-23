@@ -1,105 +1,120 @@
 import { useState } from 'react';
-import type { SkillsData, SkillCategory } from '@/shared/types/resume';
-import { createSkillCategory } from '@/shared/types/resume';
+import type { SkillItem } from '@resumate/schema';
+import { createSkillItem } from '@resumate/schema';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface SkillsSectionProps {
-  data: SkillsData;
-  onChange: (data: SkillsData) => void;
+  data: SkillItem[];
+  onChange: (data: SkillItem[]) => void;
 }
 
 export function SkillsSection({ data, onChange }: SkillsSectionProps) {
-  const [newSkillInputs, setNewSkillInputs] = useState<Record<string, string>>({});
+  const [newSkillInput, setNewSkillInput] = useState('');
+  const [newKeywordInput, setNewKeywordInput] = useState<Record<string, string>>({});
 
-  const updateCategories = (updater: (cats: SkillCategory[]) => SkillCategory[]) => {
-    onChange({ categories: updater(data.categories) });
+  const handleAddSkill = () => {
+    const name = newSkillInput.trim();
+    if (!name) return;
+    onChange([...data, createSkillItem({ name, keywords: [] })]);
+    setNewSkillInput('');
   };
 
-  const handleAddCategory = () => updateCategories(cats => [...cats, createSkillCategory()]);
-  const handleRemoveCategory = (id: string) => updateCategories(cats => cats.filter(c => c.id !== id));
-  const handleCategoryNameChange = (id: string, name: string) =>
-    updateCategories(cats => cats.map(c => c.id === id ? { ...c, name } : c));
+  const handleRemoveSkill = (id: string) => {
+    onChange(data.filter(s => s.id !== id));
+  };
 
-  const handleAddSkill = (categoryId: string) => {
-    const skillName = newSkillInputs[categoryId]?.trim();
-    if (!skillName) return;
-    updateCategories(cats => cats.map(c =>
-      c.id === categoryId ? { ...c, items: [...c.items, skillName] } : c
+  const handleSkillNameChange = (id: string, name: string) =>
+    onChange(data.map(s => s.id === id ? { ...s, name } : s));
+
+  const handleAddKeyword = (skillId: string) => {
+    const keyword = newKeywordInput[skillId]?.trim();
+    if (!keyword) return;
+    onChange(data.map(s =>
+      s.id === skillId ? { ...s, keywords: [...s.keywords, keyword] } : s
     ));
-    setNewSkillInputs(prev => ({ ...prev, [categoryId]: '' }));
+    setNewKeywordInput(prev => ({ ...prev, [skillId]: '' }));
   };
 
-  const handleRemoveSkill = (categoryId: string, skillIndex: number) =>
-    updateCategories(cats => cats.map(c =>
-      c.id === categoryId ? { ...c, items: c.items.filter((_, i) => i !== skillIndex) } : c
+  const handleRemoveKeyword = (skillId: string, keywordIndex: number) =>
+    onChange(data.map(s =>
+      s.id === skillId ? { ...s, keywords: s.keywords.filter((_, i) => i !== keywordIndex) } : s
     ));
 
   return (
     <div className="cv-section">
       <h2 className="section-title">Skills</h2>
 
-      <div className="skills-categories">
-        {data.categories.map((category) => (
-          <div key={category.id} className="skill-category">
-            <div className="category-header">
+      <div className="skills-list space-y-3">
+        {data.map((skill) => (
+          <div key={skill.id} className="skill-item border border-slate-200 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
               <Input
-                value={category.name}
-                onChange={(e) => handleCategoryNameChange(category.id, e.target.value)}
-                placeholder="Category name (e.g., Programming Languages)"
-                className="category-name-input"
+                value={skill.name}
+                onChange={(e) => handleSkillNameChange(skill.id, e.target.value)}
+                placeholder="Skill name (e.g., Programming Languages)"
+                className="flex-1"
               />
               <Button
                 variant="ghost" size="icon"
                 className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 shrink-0"
-                onClick={() => handleRemoveCategory(category.id)}
-                title="Remove category"
+                onClick={() => handleRemoveSkill(skill.id)}
+                title="Remove skill"
               >
                 <Trash2 size={15} />
               </Button>
             </div>
 
-            <div className="skills-list">
-              {category.items.map((skill, index) => (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {skill.keywords.map((keyword, index) => (
                 <div key={index} className="skill-chip">
-                  <span>{skill}</span>
+                  <span>{keyword}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveSkill(category.id, index)}
+                    onClick={() => handleRemoveKeyword(skill.id, index)}
                     className="skill-remove"
-                    title="Remove skill"
+                    title="Remove keyword"
                   >
                     <X size={13} />
                   </button>
                 </div>
               ))}
+            </div>
 
-              <div className="add-skill-input">
-                <Input
-                  value={newSkillInputs[category.id] || ''}
-                  onChange={(e) => setNewSkillInputs(prev => ({ ...prev, [category.id]: e.target.value }))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(category.id); } }}
-                  placeholder="Add skill and press Enter..."
-                  className="skill-input h-8 text-sm"
-                />
-                <Button
-                  variant="ghost" size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => handleAddSkill(category.id)}
-                  title="Add skill"
-                >
-                  <Plus size={15} />
-                </Button>
-              </div>
+            <div className="flex gap-1.5">
+              <Input
+                value={newKeywordInput[skill.id] || ''}
+                onChange={(e) => setNewKeywordInput(prev => ({ ...prev, [skill.id]: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddKeyword(skill.id); } }}
+                placeholder="Add keyword and press Enter..."
+                className="flex-1 h-8 text-sm"
+              />
+              <Button
+                variant="ghost" size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => handleAddKeyword(skill.id)}
+                title="Add keyword"
+              >
+                <Plus size={15} />
+              </Button>
             </div>
           </div>
         ))}
       </div>
 
-      <Button variant="outline" onClick={handleAddCategory} className="w-full mt-3 gap-2 border-dashed">
-        <Plus size={15} /> Add Skill Category
-      </Button>
+      <div className="flex gap-2 mt-3">
+        <Input
+          value={newSkillInput}
+          onChange={(e) => setNewSkillInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
+          placeholder="Add a new skill and press Enter..."
+          className="flex-1 h-9 text-sm"
+        />
+        <Button variant="outline" onClick={handleAddSkill} className="gap-1.5">
+          <Plus size={15} /> Add
+        </Button>
+      </div>
     </div>
   );
 }
