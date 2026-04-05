@@ -1,5 +1,7 @@
 /**
- * AI feature — re-export of existing cv-optimization components.
- * In future phases (Fase 5) these will be migrated to use the new store architecture.
+ * AI feature — CV optimization with AI assistance.
  */
-export { OptimizePage } from '@/pages/OptimizePage';
+export { JobDescriptionInput } from './components/JobDescriptionInput';
+export { ResultPreview } from './components/ResultPreview';
+export { UploadZone } from './components/UploadZone';
+export { ResumeEditor } from './components/ResumeEditor';

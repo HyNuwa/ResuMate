@@ -34,9 +34,9 @@ export const DEFAULT_PICTURE: Picture = {
   rotation: 0,
   aspectRatio: 1,
   borderRadius: 50,
-  borderColor: 'rgba(0,0,0,0)',
+  borderColor: '#000000',
   borderWidth: 0,
-  shadowColor: 'rgba(0,0,0,0)',
+  shadowColor: '#000000',
   shadowWidth: 0,
 };
 
@@ -336,9 +336,9 @@ export const DEFAULT_METADATA: Metadata = {
   },
   design: {
     colors: {
-      primary: 'rgba(37, 99, 235, 1)',
-      text: 'rgba(17, 24, 39, 1)',
-      background: 'rgba(255, 255, 255, 1)',
+      primary: '#2563eb',
+      text: '#111827',
+      background: '#ffffff',
     },
     level: {
       icon: '',

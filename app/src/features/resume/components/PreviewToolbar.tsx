@@ -1,7 +1,9 @@
-import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Download, FileJson } from 'lucide-react';
+import { useState } from 'react';
+import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Download, FileJson, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import type { ResumeData } from '@resumate/schema';
+import { printResumePDF } from '@/shared/services/cv.service';
 import { cn } from '@/lib/utils';
 
 interface PreviewToolbarProps {
@@ -35,17 +37,56 @@ function Divider() {
   return <div className="w-px h-4 bg-slate-200 mx-1" />;
 }
 
-export function PreviewToolbar({ canUndo, canRedo, onUndo, onRedo, zoomRef, resume }: PreviewToolbarProps) {
-  const handleExportPDF = () => {
-    setTimeout(() => window.print(), 200);
+interface PDFExportBtnProps {
+  resume: ResumeData;
+}
+
+function PDFExportBtn({ resume }: PDFExportBtnProps) {
+  const [loading, setLoading] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    const cvId = resume.metadata.notes;
+    if (!cvId) return;
+
+    setLoading(true);
+    try {
+      const blob = await printResumePDF(cvId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${resume.basics.name || 'resume'}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  return (
+    <button
+      onClick={handleDownloadPDF}
+      disabled={loading}
+      className={cn(
+        'inline-flex items-center justify-center h-7 w-7 rounded',
+        'text-slate-500 hover:text-slate-700 hover:bg-slate-100',
+        'transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+      )}
+      title="Exportar PDF"
+    >
+      {loading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+    </button>
+  );
+}
+
+export function PreviewToolbar({ canUndo, canRedo, onUndo, onRedo, zoomRef, resume }: PreviewToolbarProps) {
   const handleExportJSON = () => {
     const blob = new Blob([JSON.stringify(resume, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `${resume.metadata.notes || 'resume'}.json`;
+    a.download = `${resume.basics.name || 'resume'}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -77,9 +118,7 @@ export function PreviewToolbar({ canUndo, canRedo, onUndo, onRedo, zoomRef, resu
       <Divider />
 
       {/* Export */}
-      <ToolBtn onClick={handleExportPDF} title="Exportar PDF">
-        <Download size={14} />
-      </ToolBtn>
+      <PDFExportBtn resume={resume} />
       <ToolBtn onClick={handleExportJSON} title="Exportar JSON">
         <FileJson size={14} />
       </ToolBtn>

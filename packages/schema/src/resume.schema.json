@@ -301,172 +301,148 @@
       "description": "Standard sections of the resume",
       "properties": {
         "profiles": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/profileItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Social / professional profiles section"
+          "type": "object",
+          "description": "Social / professional profiles section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/profileItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "experience": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/experienceItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Work experience section"
+          "type": "object",
+          "description": "Work experience section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/experienceItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "education": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/educationItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Education section"
+          "type": "object",
+          "description": "Education section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/educationItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "projects": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/projectItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Projects section"
+          "type": "object",
+          "description": "Projects section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/projectItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "skills": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/skillItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Skills section"
+          "type": "object",
+          "description": "Skills section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/skillItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "languages": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/languageItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Languages section"
+          "type": "object",
+          "description": "Languages section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/languageItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "interests": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/interestItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Interests / hobbies section"
+          "type": "object",
+          "description": "Interests / hobbies section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/interestItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "awards": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/awardItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Awards section"
+          "type": "object",
+          "description": "Awards section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/awardItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "certifications": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/certificationItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Certifications section"
+          "type": "object",
+          "description": "Certifications section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/certificationItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "publications": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/publicationItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Publications section"
+          "type": "object",
+          "description": "Publications section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/publicationItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "volunteer": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/volunteerItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "Volunteer experience section"
+          "type": "object",
+          "description": "Volunteer experience section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/volunteerItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         },
         "references": {
-          "allOf": [
-            { "$ref": "#/$defs/sectionBase" },
-            {
-              "type": "object",
-              "properties": {
-                "items": { "type": "array", "items": { "$ref": "#/$defs/referenceItem" } }
-              },
-              "required": ["items"]
-            }
-          ],
-          "additionalProperties": false,
-          "description": "References section"
+          "type": "object",
+          "description": "References section",
+          "properties": {
+            "title":   { "type": "string" },
+            "columns": { "type": "number" },
+            "hidden":  { "type": "boolean" },
+            "items":   { "type": "array", "items": { "$ref": "#/$defs/referenceItem" } }
+          },
+          "required": ["title", "columns", "hidden", "items"],
+          "additionalProperties": false
         }
       },
       "required": [

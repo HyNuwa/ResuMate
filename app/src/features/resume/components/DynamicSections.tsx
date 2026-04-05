@@ -22,12 +22,12 @@ import type {
   CertificationItem,
   LanguageItem,
 } from '@resumate/schema';
-import { ProfileSection } from '../sections/sections/ProfileSection';
-import { ExperienceSection } from '../sections/sections/ExperienceSection';
-import { EducationSection } from '../sections/sections/EducationSection';
-import { SkillsSection } from '../sections/sections/SkillsSection';
-import { CertificationsSection } from '../sections/sections/CertificationsSection';
-import { LanguagesSection } from '../sections/sections/LanguagesSection';
+import { ProfileSection } from './sections/ProfileSection';
+import { ExperienceSection } from './sections/ExperienceSection';
+import { EducationSection } from './sections/EducationSection';
+import { SkillsSection } from './sections/SkillsSection';
+import { CertificationsSection } from './sections/CertificationsSection';
+import { LanguagesSection } from './sections/LanguagesSection';
 
 interface SortableSectionProps {
   id: string;

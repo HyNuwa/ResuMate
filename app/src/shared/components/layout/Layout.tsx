@@ -3,7 +3,9 @@ import { Sparkles, PenTool, FolderOpen } from 'lucide-react';
 
 export function Layout() {
   // Hide the global navbar inside the CV editor — it has its own EditorTopBar
-  const isEditor = useMatch('/create') ?? useMatch('/cv/:id');
+  const matchCreate = useMatch('/create');
+  const matchEdit   = useMatch('/cv/:id');
+  const isEditor = matchCreate ?? matchEdit;
 
   return (
     <div className="h-screen w-full bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 flex flex-col overflow-hidden">

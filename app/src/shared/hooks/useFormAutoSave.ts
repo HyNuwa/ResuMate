@@ -73,10 +73,8 @@ export function useFormAutoSave({
    * Call this with your state update function to trigger auto-save.
    */
   const handleChange = useCallback((updateFn: () => void) => {
-    console.log('✏️ handleChange called - updating state');
     updateFn(); // Execute the state update
     isDirty.current = true; // Mark as dirty
-    console.log('  ⏰ Debounced save scheduled');
     debouncedSave(); // Trigger debounced save
   }, [debouncedSave]);
 

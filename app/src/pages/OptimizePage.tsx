@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { UploadZone, JobDescriptionInput, ResultPreview } from '../cv-optimization/components';
+import { UploadZone } from '../features/ai/components/UploadZone';
+import { JobDescriptionInput } from '../features/ai/components/JobDescriptionInput';
+import { ResultPreview } from '../features/ai/components/ResultPreview';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { optimizeCV, type OptimizationResult } from '../shared/services/cv.service';
 

@@ -16,6 +16,7 @@ import type {
   LanguageItem,
 } from '@resumate/schema';
 import { SectionModal } from './SectionModal';
+import { ProfileSection } from './sections/ProfileSection';
 import { cn } from '@/lib/utils';
 
 export const SECTION_META: Record<string, { label: string; emoji: string }> = {
@@ -116,10 +117,13 @@ interface SectionGroupProps {
   onItemClick: (itemId: string) => void;
   onAddItem: () => void;
   onReorderItems: (newIds: string[]) => void;
+  basics?: Basics;
+  onBasicsChange?: (b: Basics) => void;
 }
 
 function SectionGroup({
   categoryId, subItems, isExpanded, onToggle, onItemClick, onAddItem, onReorderItems,
+  basics, onBasicsChange,
 }: SectionGroupProps) {
   const meta = SECTION_META[categoryId] ?? { label: categoryId, emoji: '📄' };
 
@@ -154,7 +158,11 @@ function SectionGroup({
 
       {isExpanded && (
         <div className="border-t border-slate-100">
-          {subItems.length > 0 ? (
+          {categoryId === 'basics' && basics && onBasicsChange ? (
+            <div className="p-3">
+              <ProfileSection data={basics} onChange={onBasicsChange} />
+            </div>
+          ) : subItems.length > 0 ? (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={subItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
                 {subItems.map(item => (
@@ -282,6 +290,8 @@ export function CollapsibleSections({
             onItemClick={(itemId) => setModalTarget({ categoryId: catId, itemId })}
             onAddItem={() => setModalTarget({ categoryId: catId, itemId: null })}
             onReorderItems={(newIds) => handleReorderItems(catId, newIds)}
+            basics={basics}
+            onBasicsChange={onBasicsChange}
           />
         );
       })}

@@ -7,7 +7,7 @@
  * All components now use @resumate/schema types.
  */
 
-export * from './components/index.js';
-export * from './stores/index.js';
-export * from './hooks/index.js';
-export * from './services/index.js';
+export * from './components';
+export * from './stores';
+export * from './hooks';
+export * from './services';

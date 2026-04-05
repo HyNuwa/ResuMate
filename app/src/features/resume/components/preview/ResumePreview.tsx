@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
 import type { ResumeData } from '@resumate/schema';
 import type { TemplateId } from '@/templates';
@@ -20,7 +19,7 @@ const TEMPLATE_STYLES: Record<TemplateId, {
     doc:            'leading-[var(--preview-lh-body)]',
     name:           'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] uppercase text-center tracking-widest text-[color:var(--preview-color-text)] mb-0.5',
     contact:        'flex flex-wrap justify-center gap-x-2 text-[11px] text-gray-500 text-center mb-2',
-    sectionHeading: 'text-[11px] font-bold uppercase tracking-widest border-b pb-0.5 mt-3 mb-1 border-[color:var(--preview-color-primary)] text-[color:var(--preview-color-primary)]',
+    sectionHeading: 'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] uppercase tracking-widest border-b pb-0.5 mt-3 mb-1 border-[color:var(--preview-color-primary)] text-[color:var(--preview-color-primary)]',
     entryRow:       'flex justify-between items-baseline gap-2',
     entryDates:     'text-[11px] text-gray-500 whitespace-nowrap shrink-0',
   },
@@ -28,7 +27,7 @@ const TEMPLATE_STYLES: Record<TemplateId, {
     doc:            'leading-[var(--preview-lh-body)]',
     name:           'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] text-center tracking-wide text-[color:var(--preview-color-text)] mb-1',
     contact:        'flex flex-wrap justify-center gap-x-3 text-[11px] text-gray-500 mb-4',
-    sectionHeading: 'text-[12px] font-semibold uppercase tracking-widest border-b-2 pb-0.5 mt-4 mb-2 border-[color:var(--preview-color-primary)] text-[color:var(--preview-color-primary)]',
+    sectionHeading: 'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] uppercase tracking-widest border-b-2 pb-0.5 mt-4 mb-2 border-[color:var(--preview-color-primary)] text-[color:var(--preview-color-primary)]',
     entryRow:       'flex justify-between items-start gap-2',
     entryDates:     'text-[11px] italic text-gray-500 whitespace-nowrap shrink-0',
   },
@@ -36,7 +35,7 @@ const TEMPLATE_STYLES: Record<TemplateId, {
     doc:            'leading-[var(--preview-lh-body)]',
     name:           'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] text-left tracking-tight text-[color:var(--preview-color-text)] mb-0',
     contact:        'flex flex-wrap gap-x-2 text-[10px] text-gray-600 border-b border-gray-400 pb-1 mb-2',
-    sectionHeading: 'text-[11px] font-bold uppercase bg-gray-100 px-1 mt-3 mb-1 text-[color:var(--preview-color-primary)]',
+    sectionHeading: 'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] uppercase bg-gray-100 px-1 mt-3 mb-1 text-[color:var(--preview-color-primary)]',
     entryRow:       'flex justify-between items-baseline gap-2',
     entryDates:     'text-[10px] text-gray-500 whitespace-nowrap shrink-0',
   },
@@ -44,21 +43,14 @@ const TEMPLATE_STYLES: Record<TemplateId, {
     doc:            'leading-[var(--preview-lh-body)]',
     name:           'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] text-left text-[color:var(--preview-color-text)] mb-1 border-b-4 border-[color:var(--preview-color-primary)] pb-1 inline-block',
     contact:        'flex flex-wrap gap-x-3 text-[11px] text-gray-500 mb-4',
-    sectionHeading: 'text-[12px] font-bold uppercase border-b pb-0.5 mt-4 mb-1 border-[color:var(--preview-color-primary)] text-[color:var(--preview-color-primary)]',
+    sectionHeading: 'text-[length:var(--preview-size-heading)] font-[var(--preview-weight-heading)] font-[family-name:var(--preview-font-heading)] uppercase border-b pb-0.5 mt-4 mb-1 border-[color:var(--preview-color-primary)] text-[color:var(--preview-color-primary)]',
     entryRow:       'flex justify-between items-baseline gap-2',
     entryDates:     'text-[11px] italic text-gray-500 whitespace-nowrap shrink-0',
   },
 };
 
-const md = new MarkdownIt({
-  html:    false,
-  breaks:  true,
-  linkify: true,
-});
-
-function renderMarkdown(text: string): string {
-  const rawHtml = md.render(text ?? '');
-  return DOMPurify.sanitize(rawHtml);
+function sanitizeHtml(text: string): string {
+  return DOMPurify.sanitize(text ?? '');
 }
 
 export const ResumePreview = memo(function ResumePreview({ resume }: ResumePreviewProps) {
@@ -96,7 +88,7 @@ export const ResumePreview = memo(function ResumePreview({ resume }: ResumePrevi
       {resume.summary.content && (
         <div
           className="mb-2 text-[length:var(--preview-size-body)]"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(resume.summary.content) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(resume.summary.content) }}
         />
       )}
 
@@ -110,7 +102,7 @@ export const ResumePreview = memo(function ResumePreview({ resume }: ResumePrevi
                 <span className={ts.entryDates}>{exp.period}</span>
               </div>
               {exp.description && (
-                <div className={descClass} dangerouslySetInnerHTML={{ __html: renderMarkdown(exp.description) }} />
+                <div className={descClass} dangerouslySetInnerHTML={{ __html: sanitizeHtml(exp.description) }} />
               )}
             </div>
           ))}
@@ -129,7 +121,7 @@ export const ResumePreview = memo(function ResumePreview({ resume }: ResumePrevi
               <div className="text-[12px] italic">{edu.degree}</div>
               {edu.grade && <div className="text-[11px] text-gray-500">Grade: {edu.grade}</div>}
               {edu.description && (
-                <div className={descClass} dangerouslySetInnerHTML={{ __html: renderMarkdown(edu.description) }} />
+                <div className={descClass} dangerouslySetInnerHTML={{ __html: sanitizeHtml(edu.description) }} />
               )}
             </div>
           ))}

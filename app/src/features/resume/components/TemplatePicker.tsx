@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import { CV_TEMPLATES, type TemplateId } from '@/templates';
-
 type LayoutVariant = 'standard' | 'compact';
 
 interface TemplatePickerProps {

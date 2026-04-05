@@ -4,6 +4,7 @@ import { OptimizePage } from './pages/OptimizePage';
 import { MyCVsPage } from './pages/MyCVsPage';
 import { CreateCVPage } from './pages/CreateCVPage';
 import { CVEditorPage } from './pages/CVEditorPage';
+import { PrinterPage } from './pages/PrinterPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/create" element={<CreateCVPage />} />
         <Route path="/cv/:id" element={<CVEditorPage />} />
       </Route>
+      <Route path="/printer/:id" element={<PrinterPage />} />
     </Routes>
   );
 }

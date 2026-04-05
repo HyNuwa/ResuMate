@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { MyCVsPage as MyCVsPageComponent } from '../cv-list/components';
+import { MyCVsPage as MyCVsPageComponent } from '../features/dashboard/components/MyCVsPage';
 import type { CVDocument } from '../shared/services/cv.service';
 
 export function MyCVsPage() {

@@ -1,5 +1,5 @@
 import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
-import { ResumeDocument } from '@/features/resume/components/components/ResumeDocument';
+import { ResumeDocument } from '@/features/resume/components/ResumeDocument';
 import { Download, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

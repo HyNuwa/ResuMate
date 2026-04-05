@@ -27,34 +27,41 @@ export interface OptimizationResult {
 const resumeApi = axios.create({ baseURL: `${API_BASE_URL}/resumes` });
 
 export const getAllCVs = async (): Promise<CVDocument[]> => {
-  const res = await resumeApi.get<CVDocument[]>('/');
-  return res.data;
+  const res = await resumeApi.get<{ success: boolean; data: CVDocument[] }>('/');
+  return res.data.data;
 };
 
 export const getCVById = async (id: string): Promise<CVDocument> => {
-  const res = await resumeApi.get<CVDocument>(`/${id}`);
-  return res.data;
+  const res = await resumeApi.get<{ success: boolean; data: CVDocument }>(`/${id}`);
+  return res.data.data;
 };
 
 export const createCV = async (data: ResumeData): Promise<CVDocument> => {
-  const res = await resumeApi.post<CVDocument>('/', {
+  const res = await resumeApi.post<{ success: boolean; data: CVDocument }>('/', {
     title: data.basics.name || 'Untitled CV',
     data,
     locale: 'en',
   });
-  return res.data;
+  return res.data.data;
 };
 
 export const updateCV = async (id: string, data: ResumeData): Promise<CVDocument> => {
-  const res = await resumeApi.put<CVDocument>(`/${id}`, {
+  const res = await resumeApi.put<{ success: boolean; data: CVDocument }>(`/${id}`, {
     title: data.basics.name || 'Untitled CV',
     data,
   });
-  return res.data;
+  return res.data.data;
 };
 
 export const deleteCV = async (id: string): Promise<void> => {
   await resumeApi.delete(`/${id}`);
+};
+
+export const printResumePDF = async (id: string): Promise<Blob> => {
+  const response = await axios.post(`${API_BASE_URL}/printer/${id}/pdf`, {}, {
+    responseType: 'blob',
+  });
+  return response.data;
 };
 
 export const optimizeCV = async (file: File, jobDescription: string): Promise<OptimizationResult> => {

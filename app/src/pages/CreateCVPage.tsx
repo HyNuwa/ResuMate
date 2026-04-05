@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormBasedEditor } from '@/features/resume/components';
-import { TemplatePicker } from '@/features/resume/components/components/TemplatePicker';
 import type { TemplateId } from '@/templates';
 
 type LayoutVariant = 'standard' | 'compact';
@@ -18,9 +17,5 @@ export function CreateCVPage() {
     navigate('/my-cvs');
   }, [navigate]);
 
-  if (!selectedTemplate) {
-    return <TemplatePicker onApply={handleApply} onCancel={handleCancel} />;
-  }
-
-  return <FormBasedEditor initialTemplate={selectedTemplate} />;
+  return <FormBasedEditor initialTemplate={selectedTemplate ?? 'harvard'} />;
 }

@@ -7,6 +7,7 @@ import { GeoUtils } from './modules/utils/geo_utils';
 
 // ── Route imports (legacy + new) ──────────────────────────────────────────────
 import resumeRoutes from './modules/resume/resume.routes';      // NEW — Fase 2
+import { printerRoutes } from './modules/printer';
 import legacyModelRoutes from './modules/model/routes/resumes.routes';
 import cvSyncRoutes from './modules/cv-sync/routes/cv-sync.routes';
 import scraperRoutes from './modules/scraper/scraper.routes';
@@ -67,6 +68,9 @@ export function createApp(): Express {
   // Scraper + cron (unchanged)
   app.use('/api/scraper', scraperRoutes);
   app.use('/api/cron', cronRoutes);
+
+  // Printer (PDF generation via Puppeteer)
+  app.use('/api/printer', printerRoutes);
 
   // ── 5. Health & status ─────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {

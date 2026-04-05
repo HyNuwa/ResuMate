@@ -1,7 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { CategorySelector } from './CategorySelector';
 import { EditorTopBar } from './EditorTopBar';
 import { PreviewToolbar } from './PreviewToolbar';
 import { CollapsibleSections } from './CollapsibleSections';
@@ -14,8 +13,8 @@ import {
   selectSections,
   selectMetadata,
   selectIsNewCV,
-} from '../../stores/useResumeStore';
-import { useEditorHistoryStore } from '../../stores/useHistoryStore';
+} from '../stores/useResumeStore';
+import { useEditorHistoryStore } from '../stores/useHistoryStore';
 import { useFormAutoSave } from '@/shared/hooks/useFormAutoSave';
 import { useCreateCV, useUpdateCV } from '@/shared/hooks/useQueryCVs';
 import { logger } from '@/shared/utils/logger';
@@ -27,12 +26,12 @@ interface ResizeHandleProps {
 
 function ResizeHandle({ onDrag, side }: ResizeHandleProps) {
   const dragging = useRef(false);
-  const lastX    = useRef(0);
+  const lastX = useRef(0);
 
   const onMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     dragging.current = true;
-    lastX.current    = e.clientX;
+    lastX.current = e.clientX;
 
     const onMove = (ev: MouseEvent) => {
       if (!dragging.current) return;
@@ -42,10 +41,10 @@ function ResizeHandle({ onDrag, side }: ResizeHandleProps) {
     const onUp = () => {
       dragging.current = false;
       window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup',  onUp);
+      window.removeEventListener('mouseup', onUp);
     };
     window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup',   onUp);
+    window.addEventListener('mouseup', onUp);
   };
 
   return (
@@ -65,35 +64,28 @@ const MIN_PANEL = 200;
 const MAX_PANEL = 520;
 const DEFAULT_W = 260;
 
-const ALL_SECTION_KEYS = ['basics', 'experience', 'education', 'skills', 'certifications', 'languages', 'projects', 'interests', 'awards', 'publications', 'volunteer', 'references'] as const;
+const PAGE_DIMENSIONS: Record<string, { width: string; minHeight: string }> = {
+  'a4': { width: '794px', minHeight: '1123px' },
+  'letter': { width: '816px', minHeight: '1056px' },
+  'free-form': { width: '794px', minHeight: 'auto' },
+};
 
 export interface FormBasedEditorProps {
   initialTemplate?: string;
 }
 
 export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) {
-  const resume           = useResumeStore(selectResume);
-  const basics          = useResumeStore(selectBasics);
-  const sections        = useResumeStore(selectSections);
-  const metadata        = useResumeStore(selectMetadata);
-  const isNewCV         = useResumeStore(selectIsNewCV);
+  const resume = useResumeStore(selectResume);
+  const basics = useResumeStore(selectBasics);
+  const sections = useResumeStore(selectSections);
+  const metadata = useResumeStore(selectMetadata);
+  const isNewCV = useResumeStore(selectIsNewCV);
 
-  const {
-    updateBasics,
-    updateExperience,
-    updateEducation,
-    updateSkills,
-    updateLanguages,
-    updateCertifications,
-    updateTitle,
-    updateMetadata,
-    toggleSectionHidden,
-    reorderSections,
-  } = useResumeStore();
+  const { updateBasics, updateExperience, updateEducation, updateSkills, updateLanguages, updateCertifications, updateTitle, updateMetadata, toggleSectionHidden, reorderSections } = useResumeStore();
 
   const { undo, redo } = useEditorHistoryStore();
-  const canUndo = useEditorHistoryStore(s => s.index > 0);
-  const canRedo = useEditorHistoryStore(s => s.index < s.snapshots.length - 1);
+  const canUndo = useEditorHistoryStore((s) => s.index > 0);
+  const canRedo = useEditorHistoryStore((s) => s.index < s.snapshots.length - 1);
 
   useEffect(() => {
     if (initialTemplate) {
@@ -101,16 +93,16 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
     }
   }, []);
 
-  const [leftOpen,   setLeftOpen]   = useState(true);
-  const [rightOpen,  setRightOpen]  = useState(true);
-  const [leftWidth,  setLeftWidth]  = useState(DEFAULT_W);
+  const [leftOpen, setLeftOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(true);
+  const [leftWidth, setLeftWidth] = useState(DEFAULT_W);
   const [rightWidth, setRightWidth] = useState(DEFAULT_W);
   const [showCategorySelector, setShowCategorySelector] = useState(false);
 
-  const resizeLeft  = useCallback((dx: number) =>
-    setLeftWidth( w => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w + dx))), []);
+  const resizeLeft = useCallback((dx: number) =>
+    setLeftWidth((w) => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w + dx))), []);
   const resizeRight = useCallback((dx: number) =>
-    setRightWidth(w => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w - dx))), []);
+    setRightWidth((w) => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w - dx))), []);
 
   const zoomRef = useRef<ReactZoomPanPinchRef>(null!);
 
@@ -136,39 +128,31 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
     delay: 1500,
   });
 
-  const enabledCategories = ALL_SECTION_KEYS.filter(
-    key => !resume.sections[key as keyof typeof resume.sections]?.hidden
-  );
-
-  const handleAddCategory = (categoryId: string) => {
-    handleChange(() => toggleSectionHidden(categoryId, false));
-    setShowCategorySelector(false);
-  };
+  const enabledCategories = ['basics', 'experience', 'education', 'skills', 'certifications', 'languages'];
 
   const title = metadata.notes || 'Untitled CV';
 
   const paperStyle: React.CSSProperties = {
-    width:           '794px',
-    minHeight:       '1123px',
+    width: PAGE_DIMENSIONS[metadata.page.format]?.width ?? '794px',
+    minHeight: PAGE_DIMENSIONS[metadata.page.format]?.minHeight ?? '1123px',
     backgroundColor: metadata.design.colors.background,
-    boxShadow:       '0 4px 32px rgba(0,0,0,0.18)',
-    padding:         `${metadata.page.marginY}mm ${metadata.page.marginX}mm`,
-    '--preview-font-body':      metadata.typography.body.fontFamily,
-    '--preview-weight-body':    metadata.typography.body.fontWeights[0],
-    '--preview-size-body':      `${metadata.typography.body.fontSize}px`,
-    '--preview-lh-body':        String(metadata.typography.body.lineHeight),
-    '--preview-font-heading':   metadata.typography.heading.fontFamily,
+    boxShadow: '0 4px 32px rgba(0,0,0,0.18)',
+    padding: `${metadata.page.marginY}mm ${metadata.page.marginX}mm`,
+    '--preview-font-body': metadata.typography.body.fontFamily,
+    '--preview-weight-body': metadata.typography.body.fontWeights[0],
+    '--preview-size-body': `${metadata.typography.body.fontSize}px`,
+    '--preview-lh-body': String(metadata.typography.body.lineHeight),
+    '--preview-font-heading': metadata.typography.heading.fontFamily,
     '--preview-weight-heading': metadata.typography.heading.fontWeights[0],
-    '--preview-size-heading':   `${metadata.typography.heading.fontSize}px`,
-    '--preview-lh-heading':     String(metadata.typography.heading.lineHeight),
-    '--preview-color-primary':  metadata.design.colors.primary,
-    '--preview-color-text':     metadata.design.colors.text,
-    '--preview-color-bg':       metadata.design.colors.background,
+    '--preview-size-heading': `${metadata.typography.heading.fontSize}px`,
+    '--preview-lh-heading': String(metadata.typography.heading.lineHeight),
+    '--preview-color-primary': metadata.design.colors.primary,
+    '--preview-color-text': metadata.design.colors.text,
+    '--preview-color-bg': metadata.design.colors.background,
   } as React.CSSProperties;
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-100">
-
       <EditorTopBar
         title={title}
         onTitleChange={(t) => handleChange(() => updateTitle(t))}
@@ -177,6 +161,14 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
         rightOpen={rightOpen}
         onToggleLeft={() => setLeftOpen(v => !v)}
         onToggleRight={() => setRightOpen(v => !v)}
+      />
+      <PreviewToolbar
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
+        zoomRef={zoomRef}
+        resume={resume}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -214,15 +206,6 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
         )}
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          <PreviewToolbar
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onUndo={undo}
-            onRedo={redo}
-            zoomRef={zoomRef}
-            resume={resume}
-          />
-
           <div className="flex-1 overflow-hidden bg-slate-300/50">
             <TransformWrapper
               ref={zoomRef}
@@ -265,14 +248,6 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
           </>
         )}
       </div>
-
-      {showCategorySelector && (
-        <CategorySelector
-          enabledCategories={enabledCategories}
-          onAddCategory={handleAddCategory}
-          onClose={() => setShowCategorySelector(false)}
-        />
-      )}
     </div>
   );
 }

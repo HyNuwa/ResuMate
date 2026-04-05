@@ -1,6 +1,5 @@
 /**
- * Dashboard feature — re-export of existing cv-list components.
- * In future phases these will be migrated to use the new store architecture.
+ * Dashboard feature — CV listing and management.
  */
-export { MyCVsPage } from '@/cv-list/components/MyCVsPage';
-export { CVCard } from '@/cv-list/components/CVCard';
+export { MyCVsPage } from './components/MyCVsPage';
+export { CVCard } from './components/CVCard';

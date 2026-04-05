@@ -10,7 +10,6 @@ import { HARVARD_TEMPLATE_MARKDOWN } from '@/templates/HarvardTemplate';
 import '@/styles/resume-editor.css';
 import { Download, Bold, Italic, List } from 'lucide-react';
 
-// Minimal markdown→HTML for initial content rendering
 function markdownToHtml(md: string): string {
   if (!md) return '';
   return md
@@ -40,7 +39,6 @@ export function ResumeEditor() {
     content: markdownToHtml(HARVARD_TEMPLATE_MARKDOWN),
   });
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => { editor?.destroy(); };
   }, [editor]);
@@ -56,7 +54,6 @@ export function ResumeEditor() {
 
   return (
     <div className="resume-editor-container">
-      {/* Editor Panel */}
       <div className="editor-panel">
         <div className="editor-header">
           <h3>Edit Your Resume</h3>
@@ -78,7 +75,6 @@ export function ResumeEditor() {
         <EditorContent editor={editor} className="milkdown-editor tiptap-editor" />
       </div>
 
-      {/* Preview Panel */}
       <div className="preview-panel">
         <div className="preview-header">
           <h3>Preview</h3>
