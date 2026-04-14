@@ -97,7 +97,7 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
   const [rightOpen, setRightOpen] = useState(true);
   const [leftWidth, setLeftWidth] = useState(DEFAULT_W);
   const [rightWidth, setRightWidth] = useState(DEFAULT_W);
-  const [showCategorySelector, setShowCategorySelector] = useState(false);
+  const [, setShowCategorySelector] = useState(false);
 
   const resizeLeft = useCallback((dx: number) =>
     setLeftWidth((w) => Math.min(MAX_PANEL, Math.max(MIN_PANEL, w + dx))), []);
