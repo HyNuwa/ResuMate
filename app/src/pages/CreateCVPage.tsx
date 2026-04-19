@@ -1,9 +1,31 @@
 import { useState } from 'react';
-import { FormBasedEditor } from '@/features/resume/components';
+import { FormBasedEditor, TemplatePicker } from '@/features/resume/components';
 import type { TemplateId } from '@/templates';
 
-export function CreateCVPage() {
-  const [selectedTemplate] = useState<TemplateId | null>(null);
+type CreateStep = 'select-template' | 'editor';
 
-  return <FormBasedEditor initialTemplate={selectedTemplate ?? 'harvard'} />;
+export function CreateCVPage() {
+  const [step, setStep] = useState<CreateStep>('select-template');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>(null);
+
+  const handleApplyTemplate = (templateId: TemplateId) => {
+    setSelectedTemplate(templateId);
+    setStep('editor');
+  };
+
+  const handleCancelTemplate = () => {
+    setSelectedTemplate(null);
+    setStep('editor');
+  };
+
+  if (step === 'select-template') {
+    return (
+      <TemplatePicker
+        onApply={handleApplyTemplate}
+        onCancel={handleCancelTemplate}
+      />
+    );
+  }
+
+  return <FormBasedEditor initialTemplate={selectedTemplate ?? 'classic'} />;
 }

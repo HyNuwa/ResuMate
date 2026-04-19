@@ -11,9 +11,9 @@ declare global {
 }
 
 const PAGE_DIMENSIONS: Record<string, { width: string; minHeight: string }> = {
-  'a4':        { width: '794px',  minHeight: '1123px' },
-  'letter':    { width: '816px',  minHeight: '1056px' },
-  'free-form': { width: '794px',  minHeight: 'auto'   },
+  'a4':        { width: '210mm',  minHeight: '297mm' },
+  'letter':    { width: '216mm',  minHeight: '279mm' },
+  'free-form': { width: '210mm',  minHeight: 'auto' },
 };
 
 export function PrinterPage() {
@@ -21,23 +21,41 @@ export function PrinterPage() {
 
   const { data: cv, isLoading, error } = useCV(id);
 
-  // Signal to Puppeteer that the page is ready for PDF capture
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'printer-page-rules';
+    style.textContent = `
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      @page :first {
+        margin: 0;
+      }
+      html, body {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
   useEffect(() => {
     if (cv?.data) {
-      // Small delay to let fonts/styles settle
-      const timer = setTimeout(() => {
+      requestAnimationFrame(() => {
         window.wfPrintReady = true;
-      }, 200);
-      return () => clearTimeout(timer);
+      });
     }
   }, [cv]);
 
-  // Hide React Query Devtools and any other floating UI on this route
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'printer-overrides';
     style.textContent = `
-      /* Hide React Query Devtools */
       .ReactQueryDevtools,
       [class*="ReactQueryDevtools"],
       button[aria-label="Open React Query Devtools"],
@@ -71,22 +89,26 @@ export function PrinterPage() {
   const { data: resume } = cv;
   const metadata = resume.metadata;
 
-  // The paper div IS the page — no wrapper background, no padding around it.
-  // Puppeteer captures the full page, so this div must be the only visible element.
+  const bodyFontWeights = Array.isArray(metadata.typography.body.fontWeights)
+    ? metadata.typography.body.fontWeights
+    : ['400'];
+  const headingFontWeights = Array.isArray(metadata.typography.heading.fontWeights)
+    ? metadata.typography.heading.fontWeights
+    : ['700'];
+
   const paperStyle: React.CSSProperties = {
-    width:           PAGE_DIMENSIONS[metadata.page.format]?.width ?? '794px',
-    minHeight:       PAGE_DIMENSIONS[metadata.page.format]?.minHeight ?? '1123px',
+    width: PAGE_DIMENSIONS[metadata.page.format]?.width ?? '210mm',
+    minHeight: PAGE_DIMENSIONS[metadata.page.format]?.minHeight ?? '297mm',
     backgroundColor: metadata.design.colors.background,
-    margin:          '0 auto',
-    padding:         `${metadata.page.marginY}mm ${metadata.page.marginX}mm`,
-    // CSS custom properties for ResumePreview
+    margin: '0 auto',
+    padding: `${metadata.page.marginY}mm ${metadata.page.marginX}mm`,
     '--preview-font-body':      metadata.typography.body.fontFamily,
-    '--preview-weight-body':    metadata.typography.body.fontWeights[0],
-    '--preview-size-body':      `${metadata.typography.body.fontSize}px`,
+    '--preview-weight-body':    bodyFontWeights[0] ?? '400',
+    '--preview-size-body':      `${metadata.typography.body.fontSize}pt`,
     '--preview-lh-body':        String(metadata.typography.body.lineHeight),
     '--preview-font-heading':   metadata.typography.heading.fontFamily,
-    '--preview-weight-heading': metadata.typography.heading.fontWeights[0],
-    '--preview-size-heading':   `${metadata.typography.heading.fontSize}px`,
+    '--preview-weight-heading': headingFontWeights[0] ?? '700',
+    '--preview-size-heading':   `${metadata.typography.heading.fontSize}pt`,
     '--preview-lh-heading':     String(metadata.typography.heading.lineHeight),
     '--preview-color-primary':  metadata.design.colors.primary,
     '--preview-color-text':     metadata.design.colors.text,

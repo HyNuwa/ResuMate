@@ -80,18 +80,21 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
   const sections = useResumeStore(selectSections);
   const metadata = useResumeStore(selectMetadata);
   const isNewCV = useResumeStore(selectIsNewCV);
-
-  const { updateBasics, updateExperience, updateEducation, updateSkills, updateLanguages, updateCertifications, updateTitle, updateMetadata, toggleSectionHidden, reorderSections } = useResumeStore();
+  const { resetToNew, updateBasics, updateExperience, updateEducation, updateSkills, updateLanguages, updateCertifications, updateTitle, updateMetadata, toggleSectionHidden, reorderSections } = useResumeStore();
 
   const { undo, redo } = useEditorHistoryStore();
   const canUndo = useEditorHistoryStore((s) => s.index > 0);
   const canRedo = useEditorHistoryStore((s) => s.index < s.snapshots.length - 1);
 
   useEffect(() => {
+    resetToNew();
+  }, [resetToNew]);
+
+  useEffect(() => {
     if (initialTemplate) {
       updateMetadata({ template: initialTemplate });
     }
-  }, []);
+  }, [initialTemplate, updateMetadata]);
 
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
@@ -132,6 +135,13 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
 
   const title = metadata.notes || 'Untitled CV';
 
+  const bodyFontWeights = Array.isArray(metadata.typography.body.fontWeights)
+    ? metadata.typography.body.fontWeights
+    : ['400'];
+  const headingFontWeights = Array.isArray(metadata.typography.heading.fontWeights)
+    ? metadata.typography.heading.fontWeights
+    : ['700'];
+
   const paperStyle: React.CSSProperties = {
     width: PAGE_DIMENSIONS[metadata.page.format]?.width ?? '794px',
     minHeight: PAGE_DIMENSIONS[metadata.page.format]?.minHeight ?? '1123px',
@@ -139,12 +149,12 @@ export function FormBasedEditor({ initialTemplate }: FormBasedEditorProps = {}) 
     boxShadow: '0 4px 32px rgba(0,0,0,0.18)',
     padding: `${metadata.page.marginY}mm ${metadata.page.marginX}mm`,
     '--preview-font-body': metadata.typography.body.fontFamily,
-    '--preview-weight-body': metadata.typography.body.fontWeights[0],
-    '--preview-size-body': `${metadata.typography.body.fontSize}px`,
+    '--preview-weight-body': bodyFontWeights[0] ?? '400',
+    '--preview-size-body': `${metadata.typography.body.fontSize}pt`,
     '--preview-lh-body': String(metadata.typography.body.lineHeight),
     '--preview-font-heading': metadata.typography.heading.fontFamily,
-    '--preview-weight-heading': metadata.typography.heading.fontWeights[0],
-    '--preview-size-heading': `${metadata.typography.heading.fontSize}px`,
+    '--preview-weight-heading': headingFontWeights[0] ?? '700',
+    '--preview-size-heading': `${metadata.typography.heading.fontSize}pt`,
     '--preview-lh-heading': String(metadata.typography.heading.lineHeight),
     '--preview-color-primary': metadata.design.colors.primary,
     '--preview-color-text': metadata.design.colors.text,

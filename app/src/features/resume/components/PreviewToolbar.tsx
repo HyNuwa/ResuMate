@@ -43,10 +43,11 @@ interface PDFExportBtnProps {
 
 function PDFExportBtn({ resume }: PDFExportBtnProps) {
   const [loading, setLoading] = useState(false);
+  const resumeName = typeof resume?.basics?.name === 'string' ? resume.basics.name : 'resume';
 
   const handleDownloadPDF = async () => {
-    const cvId = resume.metadata.notes;
-    if (!cvId) return;
+    const cvId = resume?.metadata?.notes;
+    if (!cvId || typeof cvId !== 'string') return;
 
     setLoading(true);
     try {
@@ -54,7 +55,7 @@ function PDFExportBtn({ resume }: PDFExportBtnProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${resume.basics.name || 'resume'}.pdf`;
+      a.download = `${resumeName}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -81,12 +82,14 @@ function PDFExportBtn({ resume }: PDFExportBtnProps) {
 }
 
 export function PreviewToolbar({ canUndo, canRedo, onUndo, onRedo, zoomRef, resume }: PreviewToolbarProps) {
+  const resumeName = typeof resume?.basics?.name === 'string' ? resume.basics.name : 'resume';
+
   const handleExportJSON = () => {
     const blob = new Blob([JSON.stringify(resume, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `${resume.basics.name || 'resume'}.json`;
+    a.download = `${resumeName}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

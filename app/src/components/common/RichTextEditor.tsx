@@ -257,12 +257,9 @@ export const RichTextEditor = memo(function RichTextEditor({
     extensions: [
       StarterKit.configure({
         heading: false,
-        // Disable built-in list extensions — we register them explicitly below
         bulletList: false,
         orderedList: false,
         listItem: false,
-        // Disable built-in underline — we register UnderlineExtension explicitly
-        // so the toolbar can toggle it; some StarterKit versions bundle it.
       }),
       BulletList,
       OrderedList,
@@ -290,6 +287,19 @@ export const RichTextEditor = memo(function RichTextEditor({
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-slate-800',
+      },
+      handlePaste: (_view, event, _slice) => {
+        const clipboardData = event.clipboardData;
+        if (clipboardData) {
+          const hasImage = Array.from(clipboardData.items).some(
+            (item) => item.type.startsWith('image/')
+          );
+          if (hasImage) {
+            event.preventDefault();
+            return true;
+          }
+        }
+        return false;
       },
     },
     immediatelyRender: false,
